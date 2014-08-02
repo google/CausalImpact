@@ -1,0 +1,11 @@
+export(CausalImpact)
+
+S3method(summary, CausalImpact)
+S3method(print, CausalImpact)
+S3method(plot, CausalImpact)
+
+import(assertthat)
+import(bsts)
+import(dplyr)
+import(ggplot2)
+import(zoo)
