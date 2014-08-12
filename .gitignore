@@ -1,0 +1,7 @@
+# Object files
+*.o
+*.so
+# Rcheck results
+*Rcheck*
+# Temporary files
+*~
