@@ -7,6 +7,7 @@ This R package implements an approach to estimating the causal effect of a desig
 #### Installation
 
 ```R
+install.packages("devtools")
 library(devtools)
 devtools::install_github("google/CausalImpact")
 ```
