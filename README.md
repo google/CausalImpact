@@ -14,3 +14,7 @@ devtools::install_github("google/CausalImpact")
 #### Documentation and examples
 
 See: CausalImpact.html
+
+#### Discussion forum
+
+https://groups.google.com/d/forum/CausalImpact
