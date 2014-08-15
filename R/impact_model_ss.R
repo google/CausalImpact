@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+# ------------------------------------------------------------------------------
 # Bayesian dynamic diffusion-regression state-space model for computing
 # counterfactual predictions in a time series. Uses an MCMC algorithm
 # implemented in the \code{bsts} package to compute samples from the posterior

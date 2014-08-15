@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+# ------------------------------------------------------------------------------
 # The CausalImpact package implements inference on the causal effect of an
 # intervention on a time series. It uses a counterfactual-forecasting strategy
 # based on a Bayesian structural time-series model.
@@ -67,6 +67,21 @@ FormatInputData <- function(data) {
   # Must not have NA in covariates (if any)
   if (ncol(data) >= 2) {
     assert_that(!any(is.na(data[, -1])))
+  }
+
+  # Rename the first column (response variable) to 'y'
+  # If the zoo object doesn't have column names, assigned default names x1, x2,
+  # x3, ... to the remaining columns. CreateImpactPlot() will expect the first
+  # column to be called 'y'. All other column names are arbitrary; we might as
+  # well set them to something else here.
+  if (!is.null(names(data))) {
+    names(data)[1] <- "y"
+  } else {
+    if (ncol(data) > 1) {
+      names(data) <- c("y", paste0("x", 1:(ncol(data) - 1)))
+    } else {
+      names(data) <- c("y")
+    }
   }
   return(data)
 }

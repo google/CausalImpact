@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+# ------------------------------------------------------------------------------
 # Unit tests for impact_analysis.R.
 #
 # Authors: kbrodersen@google.com (Kay H. Brodersen)
@@ -24,21 +24,6 @@
       "cum.pred", "cum.pred.lower", "cum.pred.upper",
       "point.effect", "point.effect.lower", "point.effect.upper",
       "cum.effect", "cum.effect.lower", "cum.effect.upper")
-
-# ------------------------------------------------------------------------------
-CreateDummyData <- function() {
-  # Returns a simple dummy data set for testing purposes.
-  #
-  # Returns:
-  #   zoo object with columns 5 columns of random data
-
-  set.seed(1)
-  dates <- seq(as.Date("2011-01-01"), as.Date("2012-12-31"), by = 1)
-  n <- length(dates)
-  data <- zoo(matrix(rnorm(n * 5), ncol = 5), dates)
-  names(data) <- c("US", "CA", "CN", "FR", "UK")
-  return(data)
-}
 
 # ------------------------------------------------------------------------------
 CallAllS3Methods <- function(impact) {
@@ -108,8 +93,7 @@ TestFormatInputForCausalImpact <- function() {
                                             alpha))
 
   # Test that <data> is converted to zoo
-  expected.data <- zoo(c(10, 20, 30, 40), c(1, 2, 3, 4))
-  dim(expected.data) <- c(4, 1)
+  expected.data <- zoo(data.frame(y = c(10, 20, 30, 40)), c(1, 2, 3, 4))
   funny.data <- list(zoo(c(10, 20, 30, 40)),
                      zoo(c(10, 20, 30, 40), c(1, 2, 3, 4)),
                      c(10, 20, 30, 40),
@@ -119,6 +103,20 @@ TestFormatInputForCausalImpact <- function() {
     checked <- FormatInputForCausalImpact(data, c(1, 3), c(4, 4),
                                           model.args, NULL, NULL, alpha)
     checkEquals(checked$data, expected.data)
+  })
+
+  # Test that the first column is renamed 'y'
+  some.data <- list(zoo(c(10, 20, 30, 40)),
+                    zoo(cbind(c(10, 20, 30, 40), c(20, 30, 40, 50))),
+                    zoo(c(10, 20, 30, 40)),
+                    zoo(cbind(c(10, 20, 30, 40), c(20, 30, 40, 50))))
+  dim(some.data[[1]]) <- c(4, 1)
+  names(some.data[[1]]) <- "a"
+  names(some.data[[2]]) <- c("a", "b")
+  lapply(some.data, function(data) {
+    checked <- FormatInputForCausalImpact(data, c(1, 3), c(4, 4),
+                                          NULL, NULL, NULL, alpha)
+    checkEquals(names(checked$data)[1], "y")
   })
 
   # Test data frame input
@@ -258,15 +256,30 @@ TestCausalImpact.RunWithData <- function() {
   data <- zoo(cbind(rnorm(200), rnorm(200), rnorm(200)))
   names(data) <- c("a", "b", "c")
   impact <- CausalImpact(data, pre.period, post.period, model.args)
-  checkEquals(names(impact$series)[1], "a")
+  checkEquals(names(impact$series)[1], "y")
+  #
+  # Zoo series with only 1 variable
+  data <- rnorm(200)
+  impact <- CausalImpact(data, pre.period, post.period, model.args)
+  checkEquals(names(impact$series)[1], "y")
   #
   # Data frame
   data <- data.frame(a = rnorm(200), b = rnorm(200), c = rnorm(200))
   impact <- CausalImpact(data, pre.period, post.period, model.args)
-  checkEquals(names(impact$series)[1], "a")
+  checkEquals(names(impact$series)[1], "y")
+  #
+  # Data frame with only 1 variable
+  data <- data.frame(a = rnorm(200))
+  impact <- CausalImpact(data, pre.period, post.period, model.args)
+  checkEquals(names(impact$series)[1], "y")
   #
   # Matrix
   data <- matrix(rnorm(600), ncol = 3)
+  impact <- CausalImpact(data, pre.period, post.period, model.args)
+  checkEquals(names(impact$series)[1], "y")
+  #
+  # Matrix with only 1 column
+  data <- matrix(rnorm(600), ncol = 1)
   impact <- CausalImpact(data, pre.period, post.period, model.args)
   checkEquals(names(impact$series)[1], "y")
 
@@ -317,13 +330,13 @@ TestCausalImpact.RunWithData <- function() {
   post.period <- c(251, 500)
   data <- cbind(y, x1)
   impact1 <- CausalImpact(data, pre.period, post.period,
-                           model.args = list(niter = 500,
-                                             standardize.data = FALSE))
+                          model.args = list(niter = 500,
+                                            standardize.data = FALSE))
   estimates1 <- colMeans(impact1$model$bsts.model$coefficients)
   checkEquals(as.vector(estimates1)[2], beta[2], tolerance = 0.05)
   impact2 <- CausalImpact(data, pre.period, post.period,
-                           model.args = list(niter = 500,
-                                             standardize.data = TRUE))
+                          model.args = list(niter = 500,
+                                            standardize.data = TRUE))
   estimates2 <- colMeans(impact2$model$bsts.model$coefficients)
   checkEquals(as.vector(estimates2)[2], 1, tolerance = 0.05)
 
