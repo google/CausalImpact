@@ -19,7 +19,7 @@
 #          gallusser@google.com (Fabian Gallusser)
 
 .expected.series.columns <-
-    c("y", "cum.y.model",
+    c("response", "cum.response",
       "point.pred", "point.pred.lower", "point.pred.upper",
       "cum.pred", "cum.pred.lower", "cum.pred.upper",
       "point.effect", "point.effect.lower", "point.effect.upper",
@@ -67,13 +67,14 @@ TestFormatInputForCausalImpact <- function() {
   model.args <- list(niter = 123)
   bsts.model <- list()
   class(bsts.model) <- "bsts"
-  y.post <- rnorm(100)
+  post.period.response <- rnorm(100)
   alpha <- 0.05
 
   # Test data input (usage scenario 1)
   expected <- list(data = data, pre.period = pre.period,
                    post.period = post.period, model.args = model.args,
-                   bsts.model = NULL, y.post = NULL, alpha = alpha)
+                   bsts.model = NULL, post.period.response = NULL,
+                   alpha = alpha)
   result <- FormatInputForCausalImpact(data, pre.period, post.period,
                                        model.args, NULL, NULL, alpha)
   checkEquals(result[-4], expected[-4])
@@ -82,18 +83,20 @@ TestFormatInputForCausalImpact <- function() {
   # Test bsts.model input (usage scenario 2)
   expected <- list(data = NULL, pre.period = NULL,
                    post.period = NULL, model.args = NULL,
-                   bsts.model = bsts.model, y.post = y.post, alpha = alpha)
+                   bsts.model = bsts.model,
+                   post.period.response = post.period.response, alpha = alpha)
   checked <- FormatInputForCausalImpact(NULL, NULL, NULL, NULL,
-                                        bsts.model, y.post, alpha)
+                                        bsts.model, post.period.response, alpha)
   checkEquals(checked[-4], expected[-4])
 
   # Test inconsistent input (must not provide both data and bsts.model)
   checkException(FormatInputForCausalImpact(data, pre.period, post.period,
-                                            model.args, bsts.model, y.post,
-                                            alpha))
+                                            model.args, bsts.model,
+                                            post.period.response, alpha))
 
   # Test that <data> is converted to zoo
-  expected.data <- zoo(data.frame(y = c(10, 20, 30, 40)), c(1, 2, 3, 4))
+  expected.data <- zoo(c(10, 20, 30, 40), c(1, 2, 3, 4))
+  dim(expected.data) <- c(4, 1)
   funny.data <- list(zoo(c(10, 20, 30, 40)),
                      zoo(c(10, 20, 30, 40), c(1, 2, 3, 4)),
                      c(10, 20, 30, 40),
@@ -103,20 +106,6 @@ TestFormatInputForCausalImpact <- function() {
     checked <- FormatInputForCausalImpact(data, c(1, 3), c(4, 4),
                                           model.args, NULL, NULL, alpha)
     checkEquals(checked$data, expected.data)
-  })
-
-  # Test that the first column is renamed 'y'
-  some.data <- list(zoo(c(10, 20, 30, 40)),
-                    zoo(cbind(c(10, 20, 30, 40), c(20, 30, 40, 50))),
-                    zoo(c(10, 20, 30, 40)),
-                    zoo(cbind(c(10, 20, 30, 40), c(20, 30, 40, 50))))
-  dim(some.data[[1]]) <- c(4, 1)
-  names(some.data[[1]]) <- "a"
-  names(some.data[[2]]) <- c("a", "b")
-  lapply(some.data, function(data) {
-    checked <- FormatInputForCausalImpact(data, c(1, 3), c(4, 4),
-                                          NULL, NULL, NULL, alpha)
-    checkEquals(names(checked$data)[1], "y")
   })
 
   # Test data frame input
@@ -204,16 +193,18 @@ TestFormatInputForCausalImpact <- function() {
   bad.bsts.model <- list(NULL, NA, 1, c(1, 2, 3))
   lapply(bad.bsts.model, function(bsts.model) {
     checkException(FormatInputForCausalImpact(NULL, NULL, NULL, NULL,
-                                              bsts.model, y.post, alpha)) })
+                                              bsts.model, post.period.response,
+                                              alpha)) })
 
-  # Test bad <y.post>
+  # Test bad <post.period.response>
   # (Note that consistency with bsts.model is not tested in
   # FormatInputForCausalImpact().)
-  bad.y.post <- list(NULL, as.Date("2011-01-01"),
-                     data.frame(x = c(1, 2, 3)), TRUE)
-  lapply(bad.y.post, function(y.post) {
+  bad.post.period.response <- list(NULL, as.Date("2011-01-01"),
+                                   data.frame(x = c(1, 2, 3)), TRUE)
+  lapply(bad.post.period.response, function(post.period.response) {
     checkException(FormatInputForCausalImpact(NULL, NULL, NULL, NULL,
-                                              bsts.model, y.post, alpha)) })
+                                              bsts.model, post.period.response,
+                                              alpha)) })
 
   # Test bad <alpha>
   bad.alpha <- list(NULL, NA, as.numeric(NA), -1, 0, 1, c(0.8, 0.9), "0.1")
@@ -250,38 +241,38 @@ TestCausalImpact.RunWithData <- function() {
   # Vector
   data <- rnorm(200)
   impact <- CausalImpact(data, pre.period, post.period, model.args)
-  checkEquals(names(impact$series)[1], "y")
+  checkEquals(names(impact$series)[1], "response")
   #
   # Named zoo series
   data <- zoo(cbind(rnorm(200), rnorm(200), rnorm(200)))
   names(data) <- c("a", "b", "c")
   impact <- CausalImpact(data, pre.period, post.period, model.args)
-  checkEquals(names(impact$series)[1], "y")
+  checkEquals(names(impact$series)[1], "response")
   #
   # Zoo series with only 1 variable
   data <- rnorm(200)
   impact <- CausalImpact(data, pre.period, post.period, model.args)
-  checkEquals(names(impact$series)[1], "y")
+  checkEquals(names(impact$series)[1], "response")
   #
   # Data frame
   data <- data.frame(a = rnorm(200), b = rnorm(200), c = rnorm(200))
   impact <- CausalImpact(data, pre.period, post.period, model.args)
-  checkEquals(names(impact$series)[1], "y")
+  checkEquals(names(impact$series)[1], "response")
   #
   # Data frame with only 1 variable
   data <- data.frame(a = rnorm(200))
   impact <- CausalImpact(data, pre.period, post.period, model.args)
-  checkEquals(names(impact$series)[1], "y")
+  checkEquals(names(impact$series)[1], "response")
   #
   # Matrix
   data <- matrix(rnorm(600), ncol = 3)
   impact <- CausalImpact(data, pre.period, post.period, model.args)
-  checkEquals(names(impact$series)[1], "y")
+  checkEquals(names(impact$series)[1], "response")
   #
   # Matrix with only 1 column
   data <- matrix(rnorm(600), ncol = 1)
   impact <- CausalImpact(data, pre.period, post.period, model.args)
-  checkEquals(names(impact$series)[1], "y")
+  checkEquals(names(impact$series)[1], "response")
 
   # Test pre-period that does not begin at the beginning
   set.seed(1)
@@ -291,7 +282,7 @@ TestCausalImpact.RunWithData <- function() {
   model.args <- list(niter = 100)
   impact <- CausalImpact(data, pre.period, post.period, model.args)
   checkTrue(all(is.na(impact$series[1 : (pre.period[1] - 1), -c(1, 2)])))
-  checkEquals(impact$series$y, zoo(data))
+  checkEquals(impact$series$response, zoo(data))
 
   # Test post-period that does not last until the end of the data
   set.seed(1)
@@ -302,7 +293,7 @@ TestCausalImpact.RunWithData <- function() {
   impact <- CausalImpact(data, pre.period, post.period, model.args)
   checkTrue(all(is.na(window(impact$series,
                              start = post.period[2] + 1)[, -1])))
-  checkEquals(impact$series$y, zoo(data))
+  checkEquals(impact$series$response, zoo(data))
 
   # Test with/without <standardize.data>
   set.seed(1)
@@ -313,9 +304,10 @@ TestCausalImpact.RunWithData <- function() {
   impact1 <- CausalImpact(data, pre.period, post.period, model.args)
   model.args <- list(niter = 10000, standardize.data = TRUE)
   impact2 <- CausalImpact(data, pre.period, post.period, model.args)
-  checkEquals(impact1$series$y, zoo(data))
-  checkEquals(impact2$series$y, zoo(data))
-  checkEquals(impact1$series$y, impact2$series$y, tolerance = 0.001)
+  checkEquals(impact1$series$response, zoo(data))
+  checkEquals(impact2$series$response, zoo(data))
+  checkEquals(impact1$series$response, impact2$series$response,
+              tolerance = 0.001)
   checkEquals(impact1$series, impact2$series, tolerance = 0.1)
 
   # Recover ground truth (generative model with 1 covariate)
@@ -370,8 +362,8 @@ TestCausalImpact.RunWithData <- function() {
   pre.period <- c(1, 3)
   post.period <- c(4, 4)
   impact <- CausalImpact(data, pre.period, post.period)
-  checkEquals(impact$series$y, as.zoo(y))
-  checkEquals(impact$series$cum.y.model, as.zoo(cumsum(y)))
+  checkEquals(impact$series$response, as.zoo(y))
+  checkEquals(impact$series$cum.response, as.zoo(cumsum(y)))
   checkTrue(all(is.na(impact$series[, -c(1, 2)])))
   checkTrue(is.null(impact$summary))
   checkTrue(is.null(impact$protocol))
@@ -385,12 +377,13 @@ TestCausalImpact.RunWithBstsModel <- function() {
 
   # Test on a healthy bsts object
   y <- y.orig <- rnorm(200)
-  y.post <- y.orig[101 : 200]
+  post.period.response <- y.orig[101 : 200]
   y[101 : 200] <- NA
   X <- cbind(rnorm(200), rnorm(200))
   ss <- AddLocalLinearTrend(list(), y)
   bsts.model <- bsts(y ~ X, ss, niter = 100, ping = 0)
-  impact <- CausalImpact(bsts.model = bsts.model, y.post = y.post)
+  impact <- CausalImpact(bsts.model = bsts.model,
+                         post.period.response = post.period.response)
   checkEquals(names(impact), c("series", "summary", "protocol", "model"))
   checkEquals(names(impact$series), .expected.series.columns)
   checkEquals(nrow(impact$series), length(y))
@@ -405,7 +398,8 @@ TestCausalImpact.RunWithBstsModel <- function() {
   y[6 : 10] <- NA
   ss <- AddLocalLinearTrend(list(), y)
   bsts.model <- bsts(y ~ X, ss, niter = 100, ping = 0)
-  impact <- CausalImpact(bsts.model = bsts.model, y.post = rnorm(5))
+  impact <- CausalImpact(bsts.model = bsts.model,
+                         post.period.response = rnorm(5))
   checkEquals(time(impact$series), time(y))
   CallAllS3Methods(impact)
 
@@ -414,25 +408,26 @@ TestCausalImpact.RunWithBstsModel <- function() {
   bad.y <- list(c(1, 2, 3, 4, 5, 6),
                 c(1, 2, 3, NA, NA, 4, 5, 6),
                 c(1, NA, 2, NA, 3))
-  corresponding.y.post <- list(c(4, 5, 6),
-                               c(2, 3, 4, 5, 6),
-                               c(2, 3))
+  corresponding.post.period.response <- list(c(4, 5, 6),
+                                             c(2, 3, 4, 5, 6),
+                                             c(2, 3))
   for (i in 1:length(bad.y)) {
     y <- bad.y[[i]]
-    y.post <- corresponding.y.post[[i]]
+    post.period.response <- corresponding.post.period.response[[i]]
     X <- rnorm(length(y))
     ss <- AddLocalLinearTrend(list(), y)
     bsts.model <- bsts(y ~ X, ss, niter = 100, ping = 0)
-    checkException(CausalImpact(bsts.model = bsts.model, y.post = y.post))
+    checkException(CausalImpact(bsts.model = bsts.model,
+                                post.period.response = post.period.response))
   }
 
-  # Test <y.post> that is inconsistent with <bsts.model>
-  # Here, y.post should contain exactly 100 values.
-  bad.y.post <- list(1, rep(NA, 100), rep(as.numeric(NA), 100),
-                     c(rnorm(99), NA))
-  lapply(bad.y.post, function(y.post) {
+  # Test <post.period.response> that is inconsistent with <bsts.model>
+  # Here, post.period.response should contain exactly 100 values.
+  bad.post.period.response <- list(1, rep(NA, 100), rep(as.numeric(NA), 100),
+                                   c(rnorm(99), NA))
+  lapply(bad.post.period.response, function(post.period.response) {
     checkException(CausalImpact(NULL, NULL, NULL, NULL,
-                                bsts.model, y.post, alpha))
+                                bsts.model, post.period.response, alpha))
   })
 }
 

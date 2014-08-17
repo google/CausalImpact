@@ -5,3 +5,6 @@
 *Rcheck*
 # Temporary files
 *~
+.Rhistory
+# Rmd temp output
+CausalImpact_files/

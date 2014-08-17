@@ -16,13 +16,14 @@
 
   An alternative is to supply a custom model. In this case,
   the function is called with \code{bsts.model},
-  \code{y.post}, and \code{alpha} (optional). See Example 2
-  below.
+  \code{post.period.response}, and \code{alpha} (optional).
+  See Example 2 below.
 }
 \usage{
   CausalImpact(data = NULL, pre.period = NULL,
     post.period = NULL, model.args = NULL,
-    bsts.model = NULL, y.post = NULL, alpha = 0.05)
+    bsts.model = NULL, post.period.response = NULL,
+    alpha = 0.05)
 }
 \arguments{
   \item{data}{Time series of response variable and any
@@ -62,17 +63,17 @@
   possible to create a custom model using the
   \code{bsts} package. In this case, omit \code{data},
   \code{pre.period}, and \code{post.period}. Instead only
-  pass in \code{bsts.model}, \code{y.post}, and
-  \code{alpha} (optional). The model must have been fitted
-  on data where the response variable was set to \code{NA}
-  during the post-treatment period. The actual observed
-  data during this period must then be passed to the
-  function in \code{y.post}.}
+  pass in \code{bsts.model}, \code{post.period.response},
+  and \code{alpha} (optional). The model must have been
+  fitted on data where the response variable was set to
+  \code{NA} during the post-treatment period. The actual
+  observed data during this period must then be passed to
+  the function in \code{post.period.response}.}
 
-  \item{y.post}{Actual observed data during the
-  post-intervention period. This is required if and only if
-  a fitted \code{bsts.model} is passed instead of
-  \code{data}.}
+\item{post.period.response}{Actual observed data during
+  the post-intervention period. This is required if and
+  only if a fitted \code{bsts.model} is provided instead
+  of \code{data}.}
 
   \item{alpha}{Desired tail-area probability for posterior
   intervals. Defaults to 0.05, which will produce central
@@ -89,9 +90,9 @@
 
   \itemize{
     \item \code{series}. Time-series object (\code{zoo})
-    containing the original response \code{y} as well as
-    the computed inferences. The added columns are listed
-    in the table below.
+    containing the original response \code{response} as
+    well as the computed inferences. The added columns are
+    listed in the table below.
     \item \code{summary}. Summary statistics for the
     post-intervention period. This includes the posterior
     expectation of the overall effect, the corresponding
@@ -110,9 +111,9 @@
     \code{zoo} time-series object with the following columns:
 
     \tabular{ll}{
-      \code{y} \tab
+      \code{response} \tab
       Observed response as supplied to \code{CausalImpact()}. \cr
-      \code{cum.y.model} \tab
+      \code{cum.response} \tab
       Cumulative response during the modeling period. \cr
       \code{point.pred} \tab
       Posterior mean of counterfactual predictions. \cr
@@ -222,10 +223,11 @@ names(impact)
 # fitted model to CausalImpact(). To run this example, run
 # the code for Example 1 first.
 
-y.post <- y[post.period[1] : post.period[2]]
+post.period.response <- y[post.period[1] : post.period[2]]
 y[post.period[1] : post.period[2]] <- NA
 ss <- AddLocalLevel(list(), y)
 bsts.model <- bsts(y ~ x1, ss, niter = 1000)
-impact <- CausalImpact(bsts.model = bsts.model, y.post = y.post)
+impact <- CausalImpact(bsts.model = bsts.model,
+                       post.period.response = post.period.response)
 plot(impact)
 }

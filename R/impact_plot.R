@@ -25,7 +25,7 @@ CreateDataFrameForPlot <- function(impact) {
   #   impact: \code{CausalImpact} results object
   #
   # Returns:
-  #   data frame of: t, y, mean, lower, upper, metric
+  #   data frame of: time, response, mean, lower, upper, metric
 
   # Check input
   assert_that((class(impact) == "CausalImpact"))
@@ -34,23 +34,23 @@ CreateDataFrameForPlot <- function(impact) {
 
   # Create data frame from zoo series
   data <- as.data.frame(impact$series)
-  data <- cbind(t = time(impact$series), data)
+  data <- cbind(time = time(impact$series), data)
 
   # Reshape data frame
-  tmp1 <- data[, c("t", "y", "point.pred", "point.pred.lower",
+  tmp1 <- data[, c("time", "response", "point.pred", "point.pred.lower",
                    "point.pred.upper")]
-  names(tmp1) <- c("t", "y", "mean", "lower", "upper")
+  names(tmp1) <- c("time", "response", "mean", "lower", "upper")
   tmp1$metric <- "original"
-  tmp2 <- data[, c("t", "y", "point.effect", "point.effect.lower",
+  tmp2 <- data[, c("time", "response", "point.effect", "point.effect.lower",
                    "point.effect.upper")]
-  names(tmp2) <- c("t", "y", "mean", "lower", "upper")
+  names(tmp2) <- c("time", "response", "mean", "lower", "upper")
   tmp2$metric <- "pointwise"
-  tmp2$y <- NA
-  tmp3 <- data[, c("t", "y", "cum.effect", "cum.effect.lower",
+  tmp2$response <- NA
+  tmp3 <- data[, c("time", "response", "cum.effect", "cum.effect.lower",
                    "cum.effect.upper")]
-  names(tmp3) <- c("t", "y", "mean", "lower", "upper")
+  names(tmp3) <- c("time", "response", "mean", "lower", "upper")
   tmp3$metric <- "cumulative"
-  tmp3$y <- NA
+  tmp3$response <- NA
   data <- rbind(tmp1, tmp2, tmp3)
   data$metric <- factor(data$metric, c("original", "pointwise", "cumulative"))
   rownames(data) <- NULL
@@ -98,7 +98,7 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
   # Returns:
   #   A ggplot2 object that can be plotted using plot().
 
-  # Create data frame of: t, y, mean, lower, upper, metric
+  # Create data frame of: time, response, mean, lower, upper, metric
   data <- CreateDataFrameForPlot(impact)
 
   # Select metrics to display (and their order)
@@ -109,7 +109,7 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
   data$metric <- factor(data$metric, metrics)
 
   # Initialize plot
-  q <- ggplot(data, aes(x = t)) + theme_bw(base_size = 15)
+  q <- ggplot(data, aes(x = time)) + theme_bw(base_size = 15)
   q <- q + xlab("") + ylab("")
   if (length(metrics) > 1) {
     q <- q + facet_grid(metric ~ ., scales = "free_y")
@@ -122,7 +122,7 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
                      size = 0.6, colour = "darkblue", linetype = "dashed")
 
   # Add observed data
-  q <- q + geom_line(aes(y = y), size = 0.6)
+  q <- q + geom_line(aes(y = response), size = 0.6)
 
   # Add pre-period markers
   xintercept <- CreatePeriodMarkers(impact$model$pre.period,
@@ -156,8 +156,8 @@ plot.CausalImpact <- function(x, ...) {
   #   plot(impact)
   #
   #   # Customized plot:
-  #   q <- plot(impact) + ylab("Sales")
-  #   plot(q)
+  #   impact.plot <- plot(impact) + ylab("Sales")
+  #   plot(impact.plot)
   #   }
 
   return(CreateImpactPlot(x, ...))

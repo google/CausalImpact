@@ -141,7 +141,7 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   is.post.period <- (1 : length(y)) >= post.period.begin
   cum.pred.mean.pre <- cumsum(as.vector(y)[1 : (post.period.begin - 1)])
   cum.pred.mean.post <- cumsum(point.pred$point.pred[is.post.period]) +
-    cum.pred.mean.pre[post.period.begin - 1]
+      cum.pred.mean.pre[post.period.begin - 1]
   cum.pred.mean <- c(cum.pred.mean.pre, cum.pred.mean.post)
 
   # Check for overflow (b/11313017)
@@ -152,7 +152,7 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   cum.pred.upper.pre <- cum.pred.mean.pre
   y.samples.cum.post <- t(apply(y.samples[, is.post.period, drop = FALSE], 1,
                                 cumsum)) +
-    cum.pred.mean.pre[post.period.begin - 1]
+      cum.pred.mean.pre[post.period.begin - 1]
   if (sum(is.post.period) == 1) {
     y.samples.cum.post <- t(y.samples.cum.post)
   }
@@ -248,7 +248,7 @@ CompileSummaryTable <- function(y.post, y.samples.post,
   y.post.sum <- sum(y.post)
   p <- min(sum(c(y.samples.post.sum, y.post.sum) >= y.post.sum),
            sum(c(y.samples.post.sum, y.post.sum) <= y.post.sum)) /
-    (length(y.samples.post.sum) + 1)
+      (length(y.samples.post.sum) + 1)
   assert(p > 0 && p < 1)
   summary$p <- p
   return(summary)
@@ -281,7 +281,7 @@ InterpretSummaryTable <- function(summary) {
 
   # Evaluate significance and direction of the effect (increase or decrease)
   sig <- (! ((summary$RelEffect.lower[1] < 0) &&
-               (summary$RelEffect.upper[1] > 0)))
+             (summary$RelEffect.upper[1] > 0)))
   pos <- summary$RelEffect[1] > 0
   p <- summary$p[1]
 
@@ -404,14 +404,14 @@ AssertCumulativePredictionsAreConsistent <- function(cum.pred,
 
   n <- length(cum.pred$cum.pred)
   assert(abs(cum.pred$cum.pred[n] -
-               cum.pred$cum.pred[post.period.begin - 1] -
-               summary$Pred[2]) < 0.1, "bad cum.pred$cum.pred (mean)")
+             cum.pred$cum.pred[post.period.begin - 1] -
+             summary$Pred[2]) < 0.1, "bad cum.pred$cum.pred (mean)")
   assert(abs(cum.pred$cum.pred.lower[n] -
-                 cum.pred$cum.pred.lower[post.period.begin - 1] -
-                 summary$Pred.lower[2]) < 0.1, "bad cum.pred$lower")
+             cum.pred$cum.pred.lower[post.period.begin - 1] -
+             summary$Pred.lower[2]) < 0.1, "bad cum.pred$lower")
   assert(abs(cum.pred$cum.pred.upper[n] -
-                 cum.pred$cum.pred.upper[post.period.begin - 1] -
-                 summary$Pred.upper[2]) < 0.1, "bad cum.pred$upper")
+             cum.pred$cum.pred.upper[post.period.begin - 1] -
+             summary$Pred.upper[2]) < 0.1, "bad cum.pred$upper")
 }
 
 # ------------------------------------------------------------------------------

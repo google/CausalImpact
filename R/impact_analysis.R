@@ -43,19 +43,19 @@ FormatInputData <- function(data) {
   # Returns:
   #   correctly formatted zoo object
 
-  # If <data> is a data frame with a 'date' column, try to convert
+  # If <data> is a data frame and the first column is 'date', try to convert
   if (is.data.frame(data) && tolower(names(data)[1]) %in% c("date", "time")) {
     if (class(data$date) == "Date") {
       data <- zoo(data[, -1], data$date)
     } else {
       warning(paste0("Did you mean: data = zoo(data[, -1], data$",
-                     names(data)[1]))
+                     names(data)[1], ")"))
     }
   }
 
   # Try to convert to zoo object
   data <- TryStop(as.zoo(data), "could not convert input data to zoo object")
-  
+
   # Ensure <data> is formatted in such a way that rows represent time points
   if (is.null(ncol(data))) {
     dim(data) <- c(length(data), 1)
@@ -67,21 +67,6 @@ FormatInputData <- function(data) {
   # Must not have NA in covariates (if any)
   if (ncol(data) >= 2) {
     assert_that(!any(is.na(data[, -1])))
-  }
-
-  # Rename the first column (response variable) to 'y'
-  # If the zoo object doesn't have column names, assigned default names x1, x2,
-  # x3, ... to the remaining columns. CreateImpactPlot() will expect the first
-  # column to be called 'y'. All other column names are arbitrary; we might as
-  # well set them to something else here.
-  if (!is.null(names(data))) {
-    names(data)[1] <- "y"
-  } else {
-    if (ncol(data) > 1) {
-      names(data) <- c("y", paste0("x", 1:(ncol(data) - 1)))
-    } else {
-      names(data) <- c("y")
-    }
   }
   return(data)
 }
@@ -134,29 +119,30 @@ FormatInputPrePostPeriod <- function(pre.period, post.period, data) {
 
 # ------------------------------------------------------------------------------
 FormatInputForCausalImpact <- function(data, pre.period, post.period,
-                                       model.args, bsts.model, y.post, alpha) {
+                                       model.args, bsts.model,
+                                       post.period.response, alpha) {
   # Checks and formats all input arguments supplied to CausalImpact(). See the
   # documentation of CausalImpact() for details.
   #
   # Args:
-  #   data:        zoo object or data frame
-  #   pre.period:  beginning and end of pre-period
-  #   post.period: beginning and end of post-period
-  #   model.args:  list of additional arguments for the model
-  #   bsts.model:  fitted bsts model (instead of data)
-  #   y.post:      observed response in the post-period
-  #   alpha:       tail-area for posterior intervals
+  #   data:                 zoo object or data frame
+  #   pre.period:           beginning and end of pre-period
+  #   post.period:          beginning and end of post-period
+  #   model.args:           list of additional arguments for the model
+  #   bsts.model:           fitted bsts model (instead of data)
+  #   post.period.response: observed response in the post-period
+  #   alpha:                tail-area for posterior intervals
   #
   # Returns:
   #   list of checked (and possibly reformatted) input arguments
 
   # Check that a consistent set of variables has been provided
   assert(xor(!is.null(data) && !is.null(pre.period) && !is.null(post.period) &&
-             is.null(bsts.model) && is.null(y.post),
+             is.null(bsts.model) && is.null(post.period.response),
              is.null(data) && is.null(pre.period) && is.null(post.period) &&
-             !is.null(bsts.model) && !is.null(y.post)),
+             !is.null(bsts.model) && !is.null(post.period.response)),
          paste0("must either provide data, pre.period, post.period, model.args",
-                "; or bsts.model and y.post"))
+                "; or bsts.model and post.period.response"))
 
   # Check <data> and convert to zoo, with rows representing time points
   if (!is.null(data)) {
@@ -186,9 +172,11 @@ FormatInputForCausalImpact <- function(data, pre.period, post.period,
     assert_that(class(bsts.model) == "bsts")
   }
 
-  # Check <y.post>
+  # Check <post.period.response>
   if (!is.null(bsts.model)) {
-    assert_that(!is.null(y.post), is.vector(y.post), is.numeric(y.post))
+    assert_that(!is.null(post.period.response),
+                is.vector(post.period.response),
+                is.numeric(post.period.response))
   }
 
   # Check <alpha>
@@ -199,8 +187,8 @@ FormatInputForCausalImpact <- function(data, pre.period, post.period,
 
   # Return updated arguments
   return(list(data = data, pre.period = pre.period, post.period = post.period,
-              model.args = model.args, bsts.model = bsts.model, y.post = y.post,
-              alpha = alpha))
+              model.args = model.args, bsts.model = bsts.model,
+              post.period.response = post.period.response, alpha = alpha))
 }
 
 # ------------------------------------------------------------------------------
@@ -209,7 +197,7 @@ CausalImpact <- function(data = NULL,
                          post.period = NULL,
                          model.args = NULL,
                          bsts.model = NULL,
-                         y.post = NULL,
+                         post.period.response = NULL,
                          alpha = 0.05) {
   # CausalImpact() performs causal inference through counterfactual
   # predictions using a Bayesian structural time-series model.
@@ -258,9 +246,9 @@ CausalImpact <- function(data = NULL,
   #                observed data during this period must then be passed to the
   #                function in \code{y.post}.
   #
-  #   y.post:      Actual observed data during the post-intervention period.
-  #                This is required if and only if a fitted \code{bsts.model} is
-  #                passed instead of \code{data}.
+  #   post.period.response: Actual observed data during the post-intervention
+  #                period. This is required if and only if a fitted
+  #                \code{bsts.model} is passed instead of \code{data}.
   #
   #   alpha:       Desired tail-area probability for posterior intervals.
   #                Defaults to 0.05, which will produce central 95\% intervals.
@@ -298,28 +286,30 @@ CausalImpact <- function(data = NULL,
   #   summary(impact, "protocol")
   #   plot(impact)
   #
-  #   y.post <- y[post.period[1] : post.period[2]]
-  #   y[post.period[1] : post.period[2]] <- NA
+  #   post.period.response <- y[post.period[1] : post.period[2]]
+  #   post.period.response[post.period[1] : post.period[2]] <- NA
   #   ss <- AddLocalLevel(list(), y)
   #   bsts.model <- bsts(y ~ x1, ss, niter = 1000)
-  #   impact <- CausalImpact(bsts.model = bsts.model, y.post = y.post)
+  #   impact <- CausalImpact(bsts.model = bsts.model,
+  #                          post.period.response = post.period.response)
 
   # Check input
   checked <- FormatInputForCausalImpact(data, pre.period, post.period,
-                                        model.args, bsts.model, y.post, alpha)
+                                        model.args, bsts.model,
+                                        post.period.response, alpha)
   data <- checked$data
   pre.period <- checked$pre.period
   post.period <- checked$post.period
   model.args <- checked$model.args
   bsts.model <- checked$bsts.model
-  y.post <- checked$y.post
+  post.period.response <- checked$post.period.response
   alpha <- checked$alpha
 
   # Depending on input, dispatch to the appropriate Run* method()
   if (!is.null(data)) {
     impact <- RunWithData(data, pre.period, post.period, model.args, alpha)
   } else {
-    impact <- RunWithBstsModel(bsts.model, y.post, alpha)
+    impact <- RunWithBstsModel(bsts.model, post.period.response, alpha)
   }
   return(impact)
 }
@@ -374,12 +364,11 @@ RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
   assert_that(nrow(inferences$series) == nrow(data))
 
   # Replace <y.model> by full original response
-  inferences$series <- cbind(y = data[, 1], inferences$series)
-  if (!is.null(names(data))) {
-    names(inferences$series)[1] <- names(data)[1]
-  }
-  inferences$series <-
-    inferences$series[, -which(names(inferences$series) == "y.model")]
+  inferences$series[, 1] <- data[, 1]
+
+  # Assign response-variable names
+  names(inferences$series)[1] <- "response"
+  names(inferences$series)[2] <- "cum.response"
 
   # Return 'CausalImpact' object
   model <- list(pre.period = pre.period,
@@ -396,14 +385,14 @@ RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
 }
 
 # ------------------------------------------------------------------------------
-RunWithBstsModel <- function(bsts.model, y.post, alpha = 0.05) {
+RunWithBstsModel <- function(bsts.model, post.period.response, alpha = 0.05) {
   # Runs an impact analysis on top of a fitted bsts model.
   #
   # Args:
-  #   bsts.model: fitted model, as returned by bsts(), in which the data
-  #               during the post-intervention period was set to NA
-  #   y.post:     actual observed data during the post-intervention period
-  #   alpha:      tail-probabilities of posterior intervals
+  #   bsts.model:           fitted model, as returned by bsts(), in which the
+  #                         data during the post-period was set to NA
+  #   post.period.response: observed data during the post-intervention period
+  #   alpha:                tail-probabilities of posterior intervals
   #
   # Returns:
   #   See CausalImpact().
@@ -417,11 +406,15 @@ RunWithBstsModel <- function(bsts.model, y.post, alpha = 0.05) {
                             "been set to NA"))
 
   # Compile posterior inferences
-  inferences <- CompilePosteriorInferences(bsts.model, y.post, alpha)
+  inferences <- CompilePosteriorInferences(bsts.model = bsts.model,
+                                           y.post = post.period.response,
+                                           alpha = alpha)
 
-  # The modeling period comprises everything found in bsts, so the actual
+  # Assign response-variable names
+  # N.B. The modeling period comprises everything found in bsts, so the actual
   # observed data is equal to the data in the modeling period
-  names(inferences$series)[which(names(inferences$series) == "y.model")] <- "y"
+  names(inferences$series)[1] <- "response"
+  names(inferences$series)[2] <- "cum.response"
 
   # Return 'CausalImpact' object
   model <- list(pre.period = indices$pre.period,
@@ -464,16 +457,19 @@ PrintSummary <- function(impact, digits = 2L) {
   # Define formatting helper functions
   StrTrim <- function (x) gsub("^\\s+|\\s+$", "", x)
   FormatNumber <- function(x) StrTrim(format(x, digits = digits))
-  FormatPercent <- function(x)
+  FormatPercent <- function(x) {
     StrTrim(paste0(format(x * 100, digits = digits), "%"))
-  FormatCI <- function(a, b)
+  }
+  FormatCI <- function(a, b) {
     paste0("[", StrTrim(format(a, digits = min(digits, 2))),
            ", ", StrTrim(format(b, digits = min(digits, 2))),
            "]")
-  FormatPercentCI <- function(a, b)
+  }
+  FormatPercentCI <- function(a, b) {
     paste0("[", StrTrim(format(a * 100, digits = min(digits, 2))),
            "%, ", StrTrim(format(b * 100, digits = min(digits, 2))),
            "%]")
+  }
 
   # Compile data frame with formatted numbers
   fsummary <- data.frame(

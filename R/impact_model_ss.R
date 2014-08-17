@@ -199,7 +199,7 @@ ConstructModel <- function(data, model.args = NULL) {
   # No regression?
   if (ncol(data) == 1) {
     bsts.model <- bsts(y, state.specification = ss, niter = model.args$niter,
-                        ping = 0, save.prediction.errors = TRUE, seed = 1)
+                       ping = 0, save.prediction.errors = TRUE, seed = 1)
 
   } else {
     formula <- paste0(names(data)[1], " ~ .")

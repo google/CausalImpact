@@ -138,9 +138,9 @@ impact <- CausalImpact(..., model.args = list(niter = 5000, nseasons = 7))
 
 Instead of using the default model constructed by the CausalImpact package, we can use the bsts package to specify our own model. This provides the greatest degree of flexibility.
 
-Before constructing a custom model, we set the observed data in the post-treatment period to NA, reflecting the fact that the counterfactual response is unobserved after the intervention. We keep a copy of the actual observed response in the variable y.post.
+Before constructing a custom model, we set the observed data in the post-treatment period to NA, reflecting the fact that the counterfactual response is unobserved after the intervention. We keep a copy of the actual observed response in the variable `post.period.response`.
 ```{r}
-y.post <- y[post.period[1] : post.period[2]]
+post.period.response <- y[post.period[1] : post.period[2]]
 y[post.period[1] : post.period[2]] <- NA
 ```
 
@@ -154,9 +154,10 @@ ss <- AddLocalLevel(list(), y)
 bsts.model <- bsts(y ~ x1, ss, niter = 1000)
 ```
 
-Finally, we call `CausalImpact()`. Instead of providing input data, we simply pass in the fitted model object (`bsts.model`). We also need to provide the actual observed response. This is needed so that the package can compute the difference between predicted response (stored in `bsts.model`) and actual observed response (stored in `y.post`).
+Finally, we call `CausalImpact()`. Instead of providing input data, we simply pass in the fitted model object (`bsts.model`). We also need to provide the actual observed response. This is needed so that the package can compute the difference between predicted response (stored in `bsts.model`) and actual observed response (stored in `post.period.response`).
 ```{r}
-impact <- CausalImpact(bsts.model = bsts.model, y.post = y.post)
+impact <- CausalImpact(bsts.model = bsts.model,
+                       post.period.response = post.period.response)
 ```
 
 The results can be inspected in the usual way:
@@ -185,8 +186,8 @@ The `plot()` function for `CausalImpact` objects returns a ggplot2 object. This 
 
 ```{r, eval=FALSE}
 library(ggplot2)
-q <- plot(impact) + theme_bw(base_size = 20)
-plot(q)
+impact.plot <- plot(impact) + theme_bw(base_size = 20)
+plot(impact.plot)
 ```
 
 ### How can I obtain 90% intervals instead of 95% intervals?
@@ -222,7 +223,7 @@ Group email address: causalimpact@googlegroups.com
 #### CausalImpact\
 An R package for causal inference using Bayesian structural time-series models
 
-Version 1.0.0\
+Version 1.0.1\
 Licensed under the Apache License, Version 2.0.\
 Author: Kay H. Brodersen\
 Copyright © 2014 Google, Inc.

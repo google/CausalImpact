@@ -165,7 +165,7 @@ TestInterpretSummaryTable <- function() {
 # ------------------------------------------------------------------------------
 TestCheckInputForCompilePosteriorInferences <- function() {
   CheckInputForCompilePosteriorInferences <-
-    CausalImpact:::CheckInputForCompilePosteriorInferences
+      CausalImpact:::CheckInputForCompilePosteriorInferences
   ConstructModel <- CausalImpact:::ConstructModel
 
   # Test empty input

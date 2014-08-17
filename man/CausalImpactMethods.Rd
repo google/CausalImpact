@@ -55,7 +55,7 @@ plot(impact, "cumulative")
 plot(impact, c("original", "pointwise"))
 
 # Customize a plot
-q <- plot(impact)
-q <- q + theme_bw(base_size = 20)
+impact.plot <- plot(impact)
+impact.plot <- impact.plot + theme_bw(base_size = 20)
 }
 }
