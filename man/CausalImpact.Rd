@@ -99,7 +99,7 @@
     posterior credible interval, and the posterior
     probability that the intervention had any effect,
     expressed in terms of a p-value.
-    \item \code{protocol}. A suggested verbal
+    \item \code{report}. A suggested verbal
     interpretation of the results.
     \item \code{model}. Additional analysis details,
     including: \code{pre.period}, \code{post.period},
@@ -208,7 +208,7 @@ impact <- CausalImpact(data, pre.period, post.period)
 
 # Print and plot results
 summary(impact)
-summary(impact, "protocol")
+summary(impact, "report")
 plot(impact)
 plot(impact, "original")
 plot(impact$model$bsts.model, "coefficients")

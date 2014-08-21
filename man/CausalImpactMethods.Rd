@@ -21,7 +21,7 @@
 
   \item{...}{Optional additional arguments. For \code{summary()}
   and \code{print()}, the first optional argument is \code{output},
-  which can be \code{"summary"} (default) or \code{"protocol"}.
+  which can be \code{"summary"} (default) or \code{"report"}.
   Partial matches are allowed. Furthermore, \code{digits} can be
   used to customize the precision of the output, e.g.:
   \code{summary(..., "summary", digits = 3)}
@@ -44,8 +44,8 @@ print(impact)
 summary(impact)
 
 # Print a verbal analysis description
-print(impact, "protocol")
-summary(impact, "protocol")
+print(impact, "report")
+summary(impact, "report")
 
 # Create a plot
 plot(impact)
