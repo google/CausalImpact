@@ -230,7 +230,7 @@ TestCompilePosteriorInferences <- function() {
   UnStandardize <- identity
   inferences <- CompilePosteriorInferences(bsts.object, y.post, alpha,
                                            UnStandardize)
-  checkEquals(names(inferences), c("series", "summary", "protocol"))
+  checkEquals(names(inferences), c("series", "summary", "report"))
   checkEquals(inferences$series$y, zoo(rbind(data[1 : 100, 1], y.post)))
   checkTrue(!any(is.na(inferences$series)))
 
@@ -250,7 +250,7 @@ TestCompileNaInferences <- function() {
 
   # Test healty input
   result <- CompileNaInferences(zoo(c(1, 2, 3)))
-  checkEquals(names(result), c("series", "summary", "protocol"))
+  checkEquals(names(result), c("series", "summary", "report"))
   checkTrue(is.zoo(result$series))
   checkEquals(nrow(result$series), 3)
   checkEquals(ncol(result$series), 14)

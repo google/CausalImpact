@@ -105,13 +105,15 @@ In the example, the estimated average causal effect of treatment was 11 (rounded
 
 For additional guidance about the correct interpretation of the summary table, the package provides a verbal interpretation, which we can print using:
 ```{r, eval=FALSE}
-summary(impact, "protocol")
+summary(impact, "report")
 ```
 
 The individual numbers in the table, at full precision, can be accessed using:
 ```{r, eval=FALSE}
 impact$summary
 ```
+
+See below for tips on how to use these commands with *knitr* / *R Markdown*.
 
 ## 6. Adjusting the model
 
@@ -164,7 +166,7 @@ The results can be inspected in the usual way:
 ```{r, eval=FALSE}
 plot(impact)
 summary(impact)
-summary(impact, "protocol")
+summary(impact, "report")
 ```
 
 ## 8. Example code for common analysis tasks

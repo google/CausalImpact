@@ -38,14 +38,14 @@ CallAllS3Methods <- function(impact) {
 
   summary(impact)
   summary(impact, output = "summary")
-  summary(impact, output = "protocol")
+  summary(impact, output = "report")
   summary(impact, "summary")
-  summary(impact, "protocol")
+  summary(impact, "report")
   summary(impact, "s")
   checkException(summary(impact, "foo"))
   print(impact)
   print(impact, "summary")
-  print(impact, "protocol")
+  print(impact, "report")
   print(impact, "s")
   checkException(print(impact, "foo"))
   plot(impact)
@@ -226,7 +226,7 @@ TestCausalImpact.RunWithData <- function() {
   post.period <- c(101, 200)
   model.args <- list(niter = 100)
   impact <- CausalImpact(data, pre.period, post.period, model.args)
-  checkEquals(names(impact), c("series", "summary", "protocol", "model"))
+  checkEquals(names(impact), c("series", "summary", "report", "model"))
   checkEquals(names(impact$series), .expected.series.columns)
   checkEquals(nrow(impact$series), nrow(data))
   checkEquals(time(impact$series), time(data))
@@ -366,9 +366,9 @@ TestCausalImpact.RunWithData <- function() {
   checkEquals(impact$series$cum.response, as.zoo(cumsum(y)))
   checkTrue(all(is.na(impact$series[, -c(1, 2)])))
   checkTrue(is.null(impact$summary))
-  checkTrue(is.null(impact$protocol))
+  checkTrue(is.null(impact$report))
   print(impact)
-  print(impact, "protocol")
+  print(impact, "report")
   checkException(plot(impact))
 }
 
@@ -384,7 +384,7 @@ TestCausalImpact.RunWithBstsModel <- function() {
   bsts.model <- bsts(y ~ X, ss, niter = 100, ping = 0)
   impact <- CausalImpact(bsts.model = bsts.model,
                          post.period.response = post.period.response)
-  checkEquals(names(impact), c("series", "summary", "protocol", "model"))
+  checkEquals(names(impact), c("series", "summary", "report", "model"))
   checkEquals(names(impact$series), .expected.series.columns)
   checkEquals(nrow(impact$series), length(y))
   checkEquals(time(impact$series), 1:length(y))
@@ -447,19 +447,19 @@ TestPrintSummary <- function() {
 }
 
 # ------------------------------------------------------------------------------
-TestPrintProtocol <- function() {
-  PrintProtocol <- CausalImpact:::PrintProtocol
+TestPrintReport <- function() {
+  PrintReport <- CausalImpact:::PrintReport
 
   # Check invalid input
-  checkException(PrintProtocol(NULL))
-  impact <- list(model = list(protocol = c("foo", "bar")))
-  checkException(PrintProtocol(impact))
+  checkException(PrintReport(NULL))
+  impact <- list(model = list(report = c("foo", "bar")))
+  checkException(PrintReport(impact))
 
   # Check valid input
-  impact <- list(model = list(protocol = "foo"))
+  impact <- list(model = list(report = "foo"))
   class(impact) <- "CausalImpact"
-  PrintProtocol(impact)
-  impact <- list(model = list(protocol = c("Foo.", "Bar.")))
+  PrintReport(impact)
+  impact <- list(model = list(report = c("Foo.", "Bar.")))
   class(impact) <- "CausalImpact"
-  PrintProtocol(impact)
+  PrintReport(impact)
 }

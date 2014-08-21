@@ -507,7 +507,7 @@ CompilePosteriorInferences <- function(bsts.model, y.post, alpha = 0.05,
   point.pred.mean.post <- point.pred$point.pred[is.post.period]
   summary <- CompileSummaryTable(y.post, y.samples.post, point.pred.mean.post,
                                  alpha)
-  protocol <- InterpretSummaryTable(summary)
+  report <- InterpretSummaryTable(summary)
 
   # Compute cumulative predictions (in original space)
   cum.pred <- ComputeCumulativePredictions(y.samples, point.pred, y,
@@ -532,7 +532,7 @@ CompilePosteriorInferences <- function(bsts.model, y.post, alpha = 0.05,
   # Return <series> and <summary>
   return(list(series = series,
               summary = summary,
-              protocol = protocol))
+              report = report))
 }
 
 # ------------------------------------------------------------------------------
@@ -564,5 +564,5 @@ CompileNaInferences <- function(y.model) {
   # Return NA <series> and NULL <summary>
   return(list(series = series,
               summary = NULL,
-              protocol = NULL))
+              report = NULL))
 }
