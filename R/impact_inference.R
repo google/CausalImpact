@@ -115,7 +115,7 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   #                      by \code{ComputeResponseTrajectories()}.
   #   point.pred:        Data frame of point predictions, as returned by
   #                      \code{ComputePointPredictions()}.
-  #   y:                 Actual observed response.
+  #   y:                 Actual observed response (pre- and post-period).
   #   post.period.begin: Index of the first data point of the post-period.
   #   alpha:             The resulting coverage of the posterior intervals will
   #                      be \code{1 - alpha}.
@@ -139,13 +139,15 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
 
   # Compute posterior mean
   is.post.period <- (1 : length(y)) >= post.period.begin
-  cum.pred.mean.pre <- cumsum(as.vector(y)[1 : (post.period.begin - 1)])
+  cum.pred.mean.pre <- cumsum.na.rm(as.vector(y)[1 : (post.period.begin - 1)])
   cum.pred.mean.post <- cumsum(point.pred$point.pred[is.post.period]) +
       cum.pred.mean.pre[post.period.begin - 1]
   cum.pred.mean <- c(cum.pred.mean.pre, cum.pred.mean.post)
 
   # Check for overflow (b/11313017)
-  assert(!any(is.na(cum.pred.mean)), "unexpected NA found in cum.pred.mean")
+  assert(length(setdiff(which(is.na(cum.pred.mean)),
+                        which(is.na(y[1 : (post.period.begin - 1)])))) == 0,
+         "unexpected NA found in cum.pred.mean")
 
   # Compute posterior interval
   cum.pred.lower.pre <- cum.pred.mean.pre
@@ -432,15 +434,17 @@ CheckInputForCompilePosteriorInferences <- function(bsts.model, y.post, alpha,
   # Check <bsts.model>
   assert_that(!is.null(bsts.model))
   assert_that(class(bsts.model) == "bsts")
+  assert_that(length(bsts.model$original.series) >= 2)
 
   # Check <y.post>
   assert_that(is.zoo(y.post) || is.vector(y.post))
   y.post <- as.vector(y.post)
   assert_that(is.numeric(y.post))
+  assert_that(length(y.post) >= 1)
   assert(!any(is.na(y.post)), "NA values in y.post not currently supported")
-  assert(length(y.post) == sum(is.na(bsts.model$original.series)),
-         paste0("length of y.post must be identical to the number of NA ",
-                "values in bsts.model$original.series"))
+  assert(all(is.na(tail(bsts.model$original.series, length(y.post)))),
+         paste0("bsts.model$original.series must end on a stretch of NA ",
+                "values at least as long as y.post"))
 
   # Check <alpha>
   assert_that(is.numeric(alpha))
@@ -481,6 +485,7 @@ CompilePosteriorInferences <- function(bsts.model, y.post, alpha = 0.05,
   # Returns:
   #   series:  zoo time-series object of: point.pred, point.pred.lower, ...
   #   summary: table of summary statistics
+  #   report:  verbal description of the summary statistics
 
   # Check input
   checked <- CheckInputForCompilePosteriorInferences(bsts.model, y.post,
@@ -519,7 +524,7 @@ CompilePosteriorInferences <- function(bsts.model, y.post, alpha = 0.05,
   # Create results series
   y.model <- y
   y.model[is.post.period] <- y.post
-  cum.y.model <- cumsum(y.model)
+  cum.y.model <- cumsum.na.rm(y.model)
   series <- zoo(data.frame(y.model, cum.y.model, point.pred, cum.pred), time(y))
   series$point.effect <- series$y.model - series$point.pred
   series$point.effect.lower <- series$y.model - series$point.pred.upper

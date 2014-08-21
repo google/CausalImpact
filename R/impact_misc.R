@@ -65,6 +65,32 @@ is.wholenumber <- function(x, tol = .Machine$double.eps ^ 0.5) {
 }
 
 # ------------------------------------------------------------------------------
+cumsum.na.rm <- function(x) {
+  # Cumulative sum, ignoring NA.
+  #
+  # Args:
+  #   x: numeric vector
+  #
+  # Returns:
+  #   cumulative sum of x, but NA values are ignored
+  #
+  # Examples:
+  #   CausalImpact:::cumsum.na.rm(c(1, NA, 2))
+  #   # [1]  1 NA 3
+  #
+  #   # Compare this to the conventional cumsum():
+  #   cumsum(c(1, NA, 2))
+  #   # [1]  1 NA NA
+
+  if (is.null(x)) {
+    return(x)
+  }
+  s <- cumsum(ifelse(is.na(x), 0, x))
+  s[is.na(x)] <- NA
+  return(s)
+}
+
+# ------------------------------------------------------------------------------
 assert <- function(expr = TRUE, error = "") {
   # Throws a custom error message if a condition is not fulfilled. This is an
   # equally simple and useful R implementation of the corresponding MATLAB

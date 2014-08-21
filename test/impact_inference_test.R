@@ -69,11 +69,10 @@ TestComputePointPredictions <- function() {
 
 # ------------------------------------------------------------------------------
 TestComputeCumulativePredictions <- function() {
-  ComputePointPredictions <- CausalImpact:::ComputePointPredictions
   ComputeCumulativePredictions <- CausalImpact:::ComputeCumulativePredictions
 
   # Test empty input
-  checkException(ComputePointPredictions())
+  checkException(ComputeCumulativePredictions())
 
   # Test some healthy input
   y.samples <- matrix(rnorm(1000), nrow = 10)
@@ -95,6 +94,14 @@ TestComputeCumulativePredictions <- function() {
   checkEquals(dim(cum.pred), c(100, 3))
   checkEquals(names(cum.pred), c("cum.pred", "cum.pred.lower",
                                  "cum.pred.upper"))
+
+  # Test data <y> with missing data (NA) in pre-period
+  y[3] <- NA
+  cum.pred <- ComputeCumulativePredictions(y.samples, point.pred, y,
+                                           post.period.begin = 51,
+                                           alpha = 0.05)
+  checkTrue(all(is.na(cum.pred[3, ])))
+  checkTrue(all(!is.na(cum.pred[-3, ])))
 }
 
 # ------------------------------------------------------------------------------

@@ -73,6 +73,26 @@ TestIsWholeNumber <- function() {
 }
 
 # ------------------------------------------------------------------------------
+TestCumsumNaRm <- function() {
+  cumsum.na.rm <- CausalImpact:::cumsum.na.rm
+
+  # Test empty input
+  checkException(is.wholenumber())
+
+  # Test healthy input
+  checkEquals(cumsum.na.rm(c(1, NA, 2)), c(1, NA, 3))
+  checkEquals(cumsum.na.rm(c(NA, 1, 2)), c(NA, 1, 3))
+  checkEquals(cumsum.na.rm(c(1, 2, NA)), c(1, 3, NA))
+  checkEquals(cumsum.na.rm(c(1, 2, 3, 4)), cumsum(c(1, 2, 3, 4)))
+
+  # Test degenerate input
+  checkEquals(cumsum.na.rm(NULL), NULL)
+  checkEquals(cumsum.na.rm(c(NA, NA, NA)), as.numeric(c(NA, NA, NA)))
+  checkEquals(cumsum.na.rm(c(NA, NA)), as.numeric(c(NA, NA)))
+  checkEquals(cumsum.na.rm(c(0, NA, NA, 0)), c(0, NA, NA, 0))
+}
+
+# ------------------------------------------------------------------------------
 TestAssert <- function() {
   assert <- CausalImpact:::assert
   TryError <- CausalImpact:::TryError

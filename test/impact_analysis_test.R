@@ -274,6 +274,26 @@ TestCausalImpact.RunWithData <- function() {
   impact <- CausalImpact(data, pre.period, post.period, model.args)
   checkEquals(names(impact$series)[1], "response")
 
+  # Test missing data (NA) in pre-period response variable
+  set.seed(1)
+  data <- zoo(cbind(rnorm(200), rnorm(200), rnorm(200)))
+  data[3:5, 1] <- NA
+  pre.period <- c(1, 100)
+  post.period <- c(101, 200)
+  model.args <- list(niter = 100)
+  impact <- CausalImpact(data, pre.period, post.period, model.args)
+  checkEquals(nrow(impact$series), nrow(data))
+  checkEquals(time(impact$series), time(data))
+  unaffected.cols <- c("point.pred", "point.pred.lower", "point.pred.upper")
+  for (na.col in unaffected.cols) {
+    checkTrue(all(!is.na(as.data.frame(impact$series)[[na.col]])))
+  }
+  for (na.col in setdiff(names(impact$series), unaffected.cols)) {
+    checkTrue(all(is.na(as.data.frame(impact$series)[[na.col]][3:5])))
+    checkTrue(all(!is.na(as.data.frame(impact$series)[[na.col]][-c(3:5)])))
+  }
+  CallAllS3Methods(impact)
+
   # Test pre-period that does not begin at the beginning
   set.seed(1)
   data <- rnorm(20, mean = 100, sd = 10)
@@ -401,6 +421,31 @@ TestCausalImpact.RunWithBstsModel <- function() {
   impact <- CausalImpact(bsts.model = bsts.model,
                          post.period.response = rnorm(5))
   checkEquals(time(impact$series), time(y))
+  unaffected.cols <- c("point.pred", "point.pred.lower", "point.pred.upper")
+  for (na.col in unaffected.cols) {
+    checkTrue(all(!is.na(as.data.frame(impact$series)[[na.col]])))
+  }
+  for (na.col in setdiff(names(impact$series), unaffected.cols)) {
+    checkTrue(all(is.na(as.data.frame(impact$series)[[na.col]][3:5])))
+    checkTrue(all(!is.na(as.data.frame(impact$series)[[na.col]][-c(3:5)])))
+  }
+  CallAllS3Methods(impact)
+
+  # Test on a bsts object that has been fitted on data with NA response values
+  y <- y.orig <- rnorm(200)
+  y[3:5] <- NA
+  y.orig[3:5] <- NA
+  post.period.response <- y.orig[101 : 200]
+  y[101 : 200] <- NA
+  X <- cbind(rnorm(200), rnorm(200))
+  ss <- AddLocalLinearTrend(list(), y)
+  bsts.model <- bsts(y ~ X, ss, niter = 100, ping = 0)
+  impact <- CausalImpact(bsts.model = bsts.model,
+                         post.period.response = post.period.response)
+  checkEquals(nrow(impact$series), length(y))
+  checkEquals(time(impact$series), 1:length(y))
+  checkEquals(impact$model$pre.period, c(1, 100))
+  checkEquals(impact$model$post.period, c(101, 200))
   CallAllS3Methods(impact)
 
   # Test bsts.model that has been fitted on data not conforming to the usual
