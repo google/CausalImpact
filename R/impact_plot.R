@@ -40,16 +40,19 @@ CreateDataFrameForPlot <- function(impact) {
   tmp1 <- data[, c("time", "response", "point.pred", "point.pred.lower",
                    "point.pred.upper")]
   names(tmp1) <- c("time", "response", "mean", "lower", "upper")
+  tmp1$baseline <- NA
   tmp1$metric <- "original"
   tmp2 <- data[, c("time", "response", "point.effect", "point.effect.lower",
                    "point.effect.upper")]
   names(tmp2) <- c("time", "response", "mean", "lower", "upper")
+  tmp2$baseline <- 0
   tmp2$metric <- "pointwise"
   tmp2$response <- NA
   tmp3 <- data[, c("time", "response", "cum.effect", "cum.effect.lower",
                    "cum.effect.upper")]
   names(tmp3) <- c("time", "response", "mean", "lower", "upper")
   tmp3$metric <- "cumulative"
+  tmp3$baseline <- 0
   tmp3$response <- NA
   data <- rbind(tmp1, tmp2, tmp3)
   data$metric <- factor(data$metric, c("original", "pointwise", "cumulative"))
@@ -115,14 +118,9 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
     q <- q + facet_grid(metric ~ ., scales = "free_y")
   }
 
-  # Add predictions
+  # Add prediction intervals
   q <- q + geom_ribbon(aes(ymin = lower, ymax = upper),
                        data, fill = "SlateGray2")
-  q <- q + geom_line(aes(y = mean), data,
-                     size = 0.6, colour = "darkblue", linetype = "dashed")
-
-  # Add observed data
-  q <- q + geom_line(aes(y = response), size = 0.6)
 
   # Add pre-period markers
   xintercept <- CreatePeriodMarkers(impact$model$pre.period,
@@ -130,6 +128,17 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
                                     range(data$t))
   q <- q + geom_vline(xintercept = xintercept,
                       colour = "darkgrey", size = 0.8, linetype = "dashed")
+
+  # Add zero line to pointwise and cumulative plot
+  q <- q + geom_line(aes(y = baseline),
+                     colour = "darkgrey", size = 0.8, linetype = "solid")
+
+  # Add point predictions
+  q <- q + geom_line(aes(y = mean), data,
+                     size = 0.6, colour = "darkblue", linetype = "dashed")
+
+  # Add observed data
+  q <- q + geom_line(aes(y = response), size = 0.6)
   return(q)
 }
 
