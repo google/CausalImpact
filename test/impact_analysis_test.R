@@ -421,15 +421,8 @@ TestCausalImpact.RunWithBstsModel <- function() {
   impact <- CausalImpact(bsts.model = bsts.model,
                          post.period.response = rnorm(5))
   checkEquals(time(impact$series), time(y))
-  unaffected.cols <- c("point.pred", "point.pred.lower", "point.pred.upper")
-  for (na.col in unaffected.cols) {
-    checkTrue(all(!is.na(as.data.frame(impact$series)[[na.col]])))
-  }
-  for (na.col in setdiff(names(impact$series), unaffected.cols)) {
-    checkTrue(all(is.na(as.data.frame(impact$series)[[na.col]][3:5])))
-    checkTrue(all(!is.na(as.data.frame(impact$series)[[na.col]][-c(3:5)])))
-  }
-  CallAllS3Methods(impact)
+  checkEquals(impact$series$response[1 : 5], y[1 : 5])
+  checkTrue(all(!is.na(impact$series$response)))
 
   # Test on a bsts object that has been fitted on data with NA response values
   y <- y.orig <- rnorm(200)
@@ -447,7 +440,17 @@ TestCausalImpact.RunWithBstsModel <- function() {
   checkEquals(impact$model$pre.period, c(1, 100))
   checkEquals(impact$model$post.period, c(101, 200))
   CallAllS3Methods(impact)
-
+  #
+  # Check that data points 3..5 are NA in the right columns in impact$series
+  unaffected.cols <- c("point.pred", "point.pred.lower", "point.pred.upper")
+  for (na.col in unaffected.cols) {
+    checkTrue(all(!is.na(as.data.frame(impact$series)[[na.col]])))
+  }
+  for (na.col in setdiff(names(impact$series), unaffected.cols)) {
+    checkTrue(all(is.na(as.data.frame(impact$series)[[na.col]][3:5])))
+    checkTrue(all(!is.na(as.data.frame(impact$series)[[na.col]][-c(3:5)])))
+  }
+  
   # Test bsts.model that has been fitted on data not conforming to the usual
   # pre/post scheme
   bad.y <- list(c(1, 2, 3, 4, 5, 6),

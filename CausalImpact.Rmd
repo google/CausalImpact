@@ -214,7 +214,7 @@ Inferring causal impact using Bayesian structural time-series models\
 http://research.google.com/pubs/pub41854.html
 
 ### Google group
-https://groups.google.com/forum/#!forum/causalimpact\
+https://groups.google.com/d/forum/causalimpact\
 Group email address: causalimpact@googlegroups.com
 
 \
@@ -225,7 +225,7 @@ Group email address: causalimpact@googlegroups.com
 #### CausalImpact\
 An R package for causal inference using Bayesian structural time-series models
 
-Version 1.0.1\
+Version 1.0.2\
 Licensed under the Apache License, Version 2.0.\
 Author: Kay H. Brodersen\
 Copyright © 2014 Google, Inc.

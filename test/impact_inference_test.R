@@ -195,7 +195,7 @@ TestCheckInputForCompilePosteriorInferences <- function() {
                                                            UnStandardize)) })
 
   # Test bad <y.post>
-  bad.y.post <- list(NULL, "foo", data.frame(y.post = y.post), y.post[1 : 90],
+  bad.y.post <- list(NULL, "foo", data.frame(y.post = y.post), c(y.post, 1, 2),
                      NA * y.post, as.numeric(NA) * y.post)
   lapply(bad.y.post, function(y.post) {
     checkException(CheckInputForCompilePosteriorInferences(bsts.object, y.post,

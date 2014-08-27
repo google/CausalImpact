@@ -154,9 +154,10 @@ post.period &lt;- c(71, 100)</code></pre>
 <p>The <strong>Average</strong> column talks about what happened on average (across time) during the post-intervention period (in the example: time points 71 through 100). The <strong>Cumulative</strong> column sums up individual time points, which is a useful perspective if the response variable represents a flow quantity (such as queries, clicks, visits, installs, sales, or revenue) rather than a stock quantity (such as number of users or stock price).</p>
 <p>In the example, the estimated average causal effect of treatment was 11 (rounded to a whole number; for full precision see impact$summary). This is because we observed an average value of 99 but would have expected an average value of only 89. The 95% posterior interval of the average effect is [9.8, 11]. Since this excludes 0, we (correctly) conclude that the intervention had a causal effect on the response variable. Since we generated the data ourselves, we know that we injected a true effect of 10, and so the model accurately recovered ground truth.</p>
 <p>For additional guidance about the correct interpretation of the summary table, the package provides a verbal interpretation, which we can print using:</p>
-<pre class="r"><code>summary(impact, &quot;protocol&quot;)</code></pre>
+<pre class="r"><code>summary(impact, &quot;report&quot;)</code></pre>
 <p>The individual numbers in the table, at full precision, can be accessed using:</p>
 <pre class="r"><code>impact$summary</code></pre>
+<p>See below for tips on how to use these commands with <em>knitr</em> / <em>R Markdown</em>.</p>
 </div>
 <div id="adjusting-the-model" class="section level2">
 <h2>6. Adjusting the model</h2>
@@ -189,7 +190,7 @@ bsts.model &lt;- bsts(y ~ x1, ss, niter = 1000)</code></pre>
 <p>The results can be inspected in the usual way:</p>
 <pre class="r"><code>plot(impact)
 summary(impact)
-summary(impact, &quot;protocol&quot;)</code></pre>
+summary(impact, &quot;report&quot;)</code></pre>
 </div>
 <div id="example-code-for-common-analysis-tasks" class="section level2">
 <h2>8. Example code for common analysis tasks</h2>
@@ -229,12 +230,12 @@ plot(impact.plot)</code></pre>
 </div>
 <div id="google-group" class="section level3">
 <h3>Google group</h3>
-<p><a href="https://groups.google.com/forum/">https://groups.google.com/forum/</a>#!forum/causalimpact<br />Group email address: <a href="mailto:causalimpact@googlegroups.com">causalimpact@googlegroups.com</a></p>
+<p><a href="https://groups.google.com/d/forum/causalimpact">https://groups.google.com/d/forum/causalimpact</a><br />Group email address: <a href="mailto:causalimpact@googlegroups.com">causalimpact@googlegroups.com</a></p>
 <p><br /></p>
 <hr />
 <div id="causalimpact-an-r-package-for-causal-inference-using-bayesian-structural-time-series-models" class="section level4">
 <h4>CausalImpact<br />An R package for causal inference using Bayesian structural time-series models</h4>
-<p>Version 1.0.1<br />Licensed under the Apache License, Version 2.0.<br />Author: Kay H. Brodersen<br />Copyright © 2014 Google, Inc.</p>
+<p>Version 1.0.2<br />Licensed under the Apache License, Version 2.0.<br />Author: Kay H. Brodersen<br />Copyright © 2014 Google, Inc.</p>
 </div>
 </div>
 </div>
