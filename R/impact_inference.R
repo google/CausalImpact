@@ -381,7 +381,7 @@ InterpretSummaryTable <- function(summary) {
   if (p < summary$alpha[1]) {
     stmt <- paste0(stmt, "\n\nThe probability of obtaining this effect by ",
                    "chance is very small (Bayesian tail-area probability p = ",
-                   round(p, 3), "). This means the causal effect cam be ",
+                   round(p, 3), "). This means the causal effect can be ",
                    "considered statistically significant.")
   } else {
     stmt <- paste0(stmt, "\n\nThe probability of obtaining this ",
