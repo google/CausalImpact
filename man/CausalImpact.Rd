@@ -5,6 +5,14 @@
   \code{CausalImpact()} performs causal inference through
   counterfactual predictions using a Bayesian structural
   time-series model.
+  
+  See the package documentation
+  (http://google.github.io/CausalImpact/) to understand the
+  underlying assumptions. In particular, the model assumes
+  that the time series of the treated unit can be explained
+  in terms of a set of covariates which were themselves not
+  affected by the intervention whose causal effect we are
+  interested in.
 
   The easiest way of running a causal analysis is to call
   \code{CausalImpact()} with \code{data}, \code{pre.period},
@@ -51,12 +59,14 @@
   predict how the response variable would have evolved
   during the post-period had no intervention taken place.}
 
-  \item{model.args}{Optional arguments that can be used to
-  adjust the default construction of the state-space model
-  used for inference. For full control over the model, you
-  can construct your own model using the \code{bsts}
-  package and feed the fitted model into
-  \code{CausalImpact()}, as shown in Example 2.}
+  \item{model.args}{Further arguments to adjust the default
+  construction of the state-space model used for inference.
+  One particularly important parameter is
+  \code{prior.level.sd}, which specifies our a priori
+  knowledge about the volatility of the data. For even more
+  control over the model, you can construct your own model
+  using the \code{bsts} package and feed the fitted model
+  into \code{CausalImpact()}, as shown in Example 2.}
 
   \item{bsts.model}{Instead of passing in \code{data} and
   having \code{CausalImpact()} construct a model, it is
@@ -158,11 +168,11 @@
 
     \item \code{prior.level.sd}. Prior standard deviation of the Gaussian random
     walk of the local level, expressed in terms of data standard deviations.
-    Defaults to 0.01, which is appropriate for most datasets with low residual
-    volatility after regressing out known predictors (e.g., web searches or
-    sales in high quantities). When in doubt, a safe option is to use 0.1, as
-    validated on synthetic data, although this may give rise to unrealistically
-    wide prediction intervals on many datasets.
+    Defaults to 0.01, which is appropriate well-behaved and stable datasets with
+    low residual volatility after regressing out known predictors (e.g., web
+    searches or sales in high quantities). When in doubt, a safer option is to
+    use 0.1, as validated on synthetic data, although this may sometimes give
+    rise to unrealistically wide prediction intervals.
 
     \item \code{nseasons}. Period of the seasonal components. In order to
     include a seasonal component, set this to a whole number greater than 1. For
