@@ -3,12 +3,12 @@ citHeader("To cite CausalImpact in publications use:")
 citEntry(entry = "Article",
   title        = "Inferring causal impact using Bayesian structural time-series models",
   author       = personList(as.person("Kay H. Brodersen"), as.person("Fabian Gallusser"), as.person("Jim Koehler"), as.person("Nicolas Remy"), as.person("Steven L. Scott")),
-  journal      = "under review",
+  journal      = "Annals of Applied Statistics (in press)",
   year         = "2014",
   url          = "http://research.google.com/pubs/pub41854.html",
 
   textVersion  =
-  paste("Kay H. Brodersen et al. (under review).",
+  paste("Brodersen et al., in press, Annals of Applied Statistics.",
         "Inferring causal impact using Bayesian structural time-series models.",
         "http://research.google.com/pubs/pub41854.html")
 )

@@ -21,5 +21,5 @@ library(CausalImpact)
 
 #### Further resources
 
-* Manuscript: [Brodersen et al. (*under review*)](http://research.google.com/pubs/pub41854.html)
+* Manuscript: [Brodersen et al., Annals of Applied Statistics (*in press*)](http://research.google.com/pubs/pub41854.html)
 * Discussion forum: https://groups.google.com/d/forum/CausalImpact
