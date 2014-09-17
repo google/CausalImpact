@@ -90,8 +90,10 @@ The easiest way of visualizing the results is to use the `plot()` function that 
 ```{r, fig.width=8, fig.height=6, eval=FALSE}
 plot(impact)
 ```
-```{r, echo=FALSE}
+```{r, include=FALSE}
 library(ggplot2)
+```
+```{r, echo=FALSE}
 plot(impact) + theme_bw(base_size = 11)
 ```
 
