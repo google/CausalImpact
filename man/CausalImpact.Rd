@@ -5,7 +5,7 @@
   \code{CausalImpact()} performs causal inference through
   counterfactual predictions using a Bayesian structural
   time-series model.
-  
+
   See the package documentation
   (http://google.github.io/CausalImpact/) to understand the
   underlying assumptions. In particular, the model assumes
@@ -168,10 +168,10 @@
 
     \item \code{prior.level.sd}. Prior standard deviation of the Gaussian random
     walk of the local level, expressed in terms of data standard deviations.
-    Defaults to 0.01, which is appropriate well-behaved and stable datasets with
-    low residual volatility after regressing out known predictors (e.g., web
-    searches or sales in high quantities). When in doubt, a safer option is to
-    use 0.1, as validated on synthetic data, although this may sometimes give
+    Defaults to 0.01, a typical choice for well-behaved and stable datasets
+    with low residual volatility after regressing out known predictors (e.g.,
+    web searches or sales in high quantities). When in doubt, a safer option is
+    to use 0.1, as validated on synthetic data, although this may sometimes give
     rise to unrealistically wide prediction intervals.
 
     \item \code{nseasons}. Period of the seasonal components. In order to
