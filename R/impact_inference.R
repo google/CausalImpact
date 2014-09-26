@@ -341,7 +341,7 @@ InterpretSummaryTable <- function(summary) {
                    "the underlying intervention.")
   } else if (sig && !pos) {
     stmt <- paste0(stmt, "\n\nThis means that the negative effect observed ",
-                   "during the intevention period is statistically ",
+                   "during the intervention period is statistically ",
                    "significant. If the experimenter had expected a positive ",
                    "effect, it is recommended to ",
                    "double-check whether anomalies in the control variables ",
