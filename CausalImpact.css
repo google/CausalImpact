@@ -5,7 +5,7 @@ body, td {
 }
 
 body {
-  max-width: 800px;
+  max-width: 700px;
   margin: auto;
   padding: 1em;
   line-height: 20px;
@@ -23,13 +23,14 @@ h1 {
 
 h2 {
    font-size:1.8em;
-   margin-top: 2em;
+   margin-top: 2.2em;
    margin-bottom: 0.6em;
 }
 
 h3 {
    font-size:1.4em;
    margin-top: 2em;
+   line-height: 30px;
 }
 
 h4 {

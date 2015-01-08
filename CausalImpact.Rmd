@@ -29,7 +29,7 @@ The package is designed to make counterfactual inference as easy as fitting a re
 
 ## 1. Installing the package
 
-The `CausalImpact` package is currently available for beta testing. To install the package, type the following commands into an R session:
+To install `CausalImpact`, type the following commands into an R session:
 
 ```{r, eval=FALSE}
 install.packages("devtools")
@@ -39,13 +39,13 @@ devtools::install_github("google/CausalImpact")
 
 Once installed, the package can be loaded in a given R session using:
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE}
 library(CausalImpact)
 ```
 
 ## 2. Creating an example dataset
 
-To illustrate how the package works, we create a simple toy dataset. It consists of a response variable $y$ and a predictor $x_1$. In practice, we would strive for having many more predictor variables and let the model choose an appropriate subset. There are 100 observations. We create an *intervention effect* by lifting the response variable by 10 units after timepoint 71.
+To illustrate how the package works, we create a simple toy dataset. It consists of a response variable `y` and a predictor `x1`. Note that in practice, we'd strive for including many more predictor variables and let the model choose an appropriate subset. The example data has 100 observations. We create an *intervention effect* by lifting the response variable by 10 units after timepoint 71.
 ```{r}
 set.seed(1)
 x1 <- 100 + arima.sim(model = list(ar = 0.999), n = 100)
@@ -77,7 +77,9 @@ pre.period <- c(1, 70)
 post.period <- c(71, 100)
 ```
 
-This says that time points 1 ... 70 will be used for training, and time points 71 ... 100 will be used for computing predictions. To perform inference, we run the analysis using:
+This says that time points 1 ... 70 will be used for training, and time points 71 ... 100 will be used for computing predictions. Alternatively, we could specify the periods in terms of dates or time points; see [Section 5](#working-with-dates-and-times) for an example.
+
+To perform inference, we run the analysis using:
 ```{r}
 impact <- CausalImpact(data, pre.period, post.period)
 ```
@@ -101,7 +103,35 @@ By default, the plot contains three panels. The first panel shows the data and a
 
 Remember, once again, that all of the above inferences depend critically on the assumption that the covariates were not themselves affected by the intervention. The model also assumes that the relationship between covariates and treated time series, as established during the pre-period, remains stable throughout the post-period.
 
-## 5. Printing a summary table
+## 5. Working with dates and times
+
+It is often more natural to feed a time-series object into `CausalImpact()` rather than a data frame. For example, we might create a `data` variable as follows:
+
+```{r}
+time.points <- seq.Date(as.Date("2014-01-01"), by = 1, length.out = 100)
+data <- zoo(cbind(y, x1), time.points)
+head(data)
+```
+
+We can now specify the pre-period and the post-period in terms of time points rather than indices:
+
+```{r}
+pre.period <- as.Date(c("2014-01-01", "2014-03-11"))
+post.period <- as.Date(c("2014-03-12", "2014-04-10"))
+```
+
+As a result, the x-axis of the plot shows time points instead of indices:
+
+```{r, fig.width=8, fig.height=6, eval=FALSE}
+impact <- CausalImpact(data, pre.period, post.period)
+plot(impact)
+```
+```{r, echo=FALSE}
+impact <- CausalImpact(data, pre.period, post.period)
+plot(impact) + theme_bw(base_size = 11)
+```
+
+## 6. Printing a summary table
 
 To obtain a numerical summary of the analysis, we use:
 ```{r}
@@ -110,7 +140,7 @@ summary(impact)
 
 The **Average** column talks about the average (across time) during the post-intervention period (in the example: time points 71 through 100). The **Cumulative** column sums up individual time points, which is a useful perspective if the response variable represents a flow quantity (such as queries, clicks, visits, installs, sales, or revenue) rather than a stock quantity (such as number of users or stock price).
 
-In the example, the estimated average causal effect of treatment was 11 (rounded to a whole number; for full precision see `impact$summary`). This is because we observed an average value of 99 but would have expected an average value of only 89. The 95% posterior interval of the average effect is [9.8, 11]. Since this excludes 0, we (correctly) conclude that the intervention had a causal effect on the response variable. Since we generated the data ourselves, we know that we injected a true effect of 10, and so the model accurately recovered ground truth. One reason for this is that we ensured, by design, that the covariate $x_1$ was not itself affected by the intervention. In practice, we must always reason whether this assumption is justified.
+In the example, the estimated average causal effect of treatment was 11 (rounded to a whole number; for full precision see `impact$summary`). This is because we observed an average value of 99 but would have expected an average value of only 89. The 95% posterior interval of the average effect is [9.8, 11]. Since this excludes 0, we (correctly) conclude that the intervention had a causal effect on the response variable. Since we generated the data ourselves, we know that we injected a true effect of 10, and so the model accurately recovered ground truth. One reason for this is that we ensured, by design, that the covariate `x1` was not itself affected by the intervention. In practice, we must always reason whether this assumption is justified.
 
 For additional guidance about the correct interpretation of the summary table, the package provides a verbal interpretation, which we can print using:
 ```{r, eval=FALSE}
@@ -124,7 +154,7 @@ impact$summary
 
 See below for tips on how to use these commands with *knitr* / *R Markdown*.
 
-## 6. Adjusting the model
+## 7. Adjusting the model
 
 So far, we've simply let the package decide how to construct a time-series model for the available data. However, there are several options that allow us to gain a little more control over this process. These options are passed into `model.args` as individual list elements, for example:
 ```{r, eval=FALSE}
@@ -145,12 +175,13 @@ impact <- CausalImpact(..., model.args = list(niter = 5000, nseasons = 7))
 
 * `dynamic.regression` Whether to include time-varying regression coefficients. In combination with a time-varying local trend or even a time-varying local level, this often leads to overspecification, in which case a static regression is safer. Defaults to __FALSE__.
 
-## 7. Using a custom model
+## 8. Using a custom model
 
 Instead of using the default model constructed by the CausalImpact package, we can use the bsts package to specify our own model. This provides the greatest degree of flexibility.
 
 Before constructing a custom model, we set the observed data in the post-treatment period to NA, reflecting the fact that the counterfactual response is unobserved after the intervention. We keep a copy of the actual observed response in the variable `post.period.response`.
 ```{r}
+post.period <- c(71, 100)
 post.period.response <- y[post.period[1] : post.period[2]]
 y[post.period[1] : post.period[2]] <- NA
 ```
@@ -178,7 +209,7 @@ summary(impact)
 summary(impact, "report")
 ```
 
-## 8. FAQ
+## 9. FAQ
 
 ### How do I cite the package in my work?
 We recommend referencing the use of the CausalImpact R package as shown in the example below:
@@ -188,7 +219,7 @@ We recommend referencing the use of the CausalImpact R package as shown in the e
 To find out which package version you are using, type `packageVersion("CausalImpact")`. See the bottom of this page for full bibliographic details.
 
 ### How can I check whether the model assumptions are fulfilled?
-It's the elephant in the room with any causal analysis on observational data: how can we verify the assumptions that go into the model? Here are a few ways of getting started. First of all, it is critical to reason why the covariates that are included in the model (this was $x_1$ in the example) *were not themselves affected* by the intervention. Sometimes it helps to plot all covariates and do a visual sanity check. Next, it is a good idea to examine how well the outcome data $y$ can be predicted *before the beginning of the intervention*. This can be done by running `CausalImpact()` on an imaginary intervention. Then check how well the model predicted the data following this imaginary intervention. We would expect not to find a significant effect, i.e., counterfactual estimates and actual data should agree reasonably closely. Finally, when presenting or writing up results, be sure to list the above assumptions explicitly, including the priors in `model.args`, and discuss them with your audience.
+It's the elephant in the room with any causal analysis on observational data: how can we verify the assumptions that go into the model? Here are a few ways of getting started. First of all, it is critical to reason why the covariates that are included in the model (this was *x1* in the example) *were not themselves affected* by the intervention. Sometimes it helps to plot all covariates and do a visual sanity check. Next, it is a good idea to examine how well the outcome data *y* can be predicted *before the beginning of the intervention*. This can be done by running `CausalImpact()` on an imaginary intervention. Then check how well the model predicted the data following this imaginary intervention. We would expect not to find a significant effect, i.e., counterfactual estimates and actual data should agree reasonably closely. Finally, when presenting or writing up results, be sure to list the above assumptions explicitly, including the priors in `model.args`, and discuss them with your audience.
 
 ### May the data contain missing values?
 The response variable (i.e., the first column in data) may contain missing values (`NA`), but covariates (all other columns in data) may not. If one of your covariates contains missing values, consider imputing (i.e., estimating) the missing values; if this is not feasible, leave the regressor out.
@@ -225,7 +256,7 @@ Analyses may easily contain tens or hundreds of potential predictors (i.e., colu
 plot(impact$model$bsts.model, "coefficients")
 ```
 
-## 9. Further resources
+## 10. Further resources
 
 ### Literature
 Brodersen KH, Gallusser F, Koehler J, Remy N, Scott SL.\
@@ -248,4 +279,4 @@ An R package for causal inference using Bayesian structural time-series models
 Version `r packageVersion("CausalImpact")`\
 Licensed under the Apache License, Version 2.0.\
 Author: Kay H. Brodersen\
-Copyright © 2014 Google, Inc.
+Copyright © 2014-2015 Google, Inc.
