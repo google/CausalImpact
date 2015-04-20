@@ -264,9 +264,8 @@ Inferring causal impact using Bayesian structural time-series models.\
 *Annals of Applied Statistics (in press)*\
 http://research.google.com/pubs/pub41854.html
 
-### Google group
-https://groups.google.com/d/forum/causalimpact\
-Group email address: causalimpact@googlegroups.com
+### Discussion forum
+http://stats.stackexchange.com/\
 
 \
 
