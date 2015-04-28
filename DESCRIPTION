@@ -3,7 +3,7 @@ Title: Inferring causal impact using Bayesian structural time-series models
 Date: 2014-09-15
 Author: Kay H. Brodersen <kbrodersen@google.com>
 Maintainer: Kay H. Brodersen <kbrodersen@google.com>
-Description: Implements a Bayesian approach to causal impact estimation in time series, as described in Brodersen et al., Annals of Applied Statistics (in press). See the package documentation on GitHub to get started.
+Description: Implements a Bayesian approach to causal impact estimation in time series, as described in Brodersen et al., Annals of Applied Statistics (2015). See the package documentation on GitHub to get started.
 Copyright: Copyright (C) 2014 Google, Inc.
 Version: 1.0.3
 License: Apache License 2.0 | file LICENSE
