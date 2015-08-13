@@ -125,9 +125,8 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
   # Add pre-period markers
   if (class(data$t) == "Date"){
     post.period = impact$model$post.period
-    time.range = range(data$t)
-    time.sequence = seq.Date(time.range[1],time.range[2], by = 1)
-    xintercept = as.numeric(time.sequence[ c(post.period[1], post.period[2])])
+    time.range = unique(data$t)
+    xintercept = as.numeric(time.range[ c(post.period[1], post.period[2])])
   }else{
     xintercept <- CreatePeriodMarkers(impact$model$pre.period,
                                       impact$model$post.period,
