@@ -61,7 +61,7 @@ TestFormatInputForCausalImpact <- function() {
   checkException(FormatInputForCausalImpact())
 
   # Specify some healthy input variables
-  data <- zoo(data.frame(y = rnorm(200), x1 = rnorm(200), x2 = rnorm(200)))
+  data <- zoo::zoo(data.frame(y = rnorm(200), x1 = rnorm(200), x2 = rnorm(200)))
   pre.period <- c(1, 100)
   post.period <- c(101, 200)
   model.args <- list(niter = 123)
@@ -95,10 +95,10 @@ TestFormatInputForCausalImpact <- function() {
                                             post.period.response, alpha))
 
   # Test that <data> is converted to zoo
-  expected.data <- zoo(c(10, 20, 30, 40), c(1, 2, 3, 4))
+  expected.data <- zoo::zoo(c(10, 20, 30, 40), c(1, 2, 3, 4))
   dim(expected.data) <- c(4, 1)
-  funny.data <- list(zoo(c(10, 20, 30, 40)),
-                     zoo(c(10, 20, 30, 40), c(1, 2, 3, 4)),
+  funny.data <- list(zoo::zoo(c(10, 20, 30, 40)),
+                     zoo::zoo(c(10, 20, 30, 40), c(1, 2, 3, 4)),
                      c(10, 20, 30, 40),
                      c(10L, 20L, 30L, 40L),
                      matrix(c(10, 20, 30, 40)))
@@ -110,7 +110,7 @@ TestFormatInputForCausalImpact <- function() {
 
   # Test data frame input
   data <- data.frame(y = c(10, 20, 30, 40))
-  expected.data <- as.zoo(data)
+  expected.data <- zoo::as.zoo(data)
   checked <- FormatInputForCausalImpact(data, c(1, 3), c(4, 4),
                                         model.args, NULL, NULL, alpha)
   checkEquals(checked$data, expected.data)
@@ -142,7 +142,7 @@ TestFormatInputForCausalImpact <- function() {
 
   # Test what happens when pre.period/post.period has a different class than
   # the timestamps in <data>
-  bad.data <- zoo(c(1, 2, 3, 4), as.Date(c("2014-01-01", "2014-01-02",
+  bad.data <- zoo::zoo(c(1, 2, 3, 4), as.Date(c("2014-01-01", "2014-01-02",
                                            "2014-01-03", "2014-01-04")))
   bad.pre.period <- c(1, 3)  # numeric
   bad.post.period <- c(4, 4)
@@ -154,22 +154,22 @@ TestFormatInputForCausalImpact <- function() {
   checkException(FormatInputForCausalImpact(bad.data,
                                             bad.pre.period, bad.post.period,
                                             model.args, NULL, NULL, alpha))
-  ok.data <- zoo(c(1, 2, 3, 4))
+  ok.data <- zoo::zoo(c(1, 2, 3, 4))
   ok.pre.period <- c(1L, 3L)
   ok.post.period <- c(4L, 4L)
   FormatInputForCausalImpact(ok.data, ok.pre.period, ok.post.period,
                              model.args, NULL, NULL, alpha)
-  ok.data <- zoo(c(1, 2, 3, 4), c(1, 2, 3, 4))
+  ok.data <- zoo::zoo(c(1, 2, 3, 4), c(1, 2, 3, 4))
   ok.pre.period <- c(1, 3)
   ok.post.period <- c(4, 4)
   FormatInputForCausalImpact(ok.data, ok.pre.period, ok.post.period,
                              model.args, NULL, NULL, alpha)
-  ok.data <- zoo(c(1, 2, 3, 4), c(1, 2, 3, 4))
+  ok.data <- zoo::zoo(c(1, 2, 3, 4), c(1, 2, 3, 4))
   ok.pre.period <- c(1L, 3L)  # we'll convert integer to numeric
   ok.post.period <- c(4L, 4L)
   FormatInputForCausalImpact(ok.data, ok.pre.period, ok.post.period,
                              model.args, NULL, NULL, alpha)
-  ok.data <- zoo(c(1, 2, 3, 4))
+  ok.data <- zoo::zoo(c(1, 2, 3, 4))
   ok.pre.period <- c(1, 3)  # we'll convert numeric to integer
   ok.post.period <- c(4, 4)
   FormatInputForCausalImpact(ok.data, ok.pre.period, ok.post.period,
@@ -221,7 +221,7 @@ TestCausalImpact.RunWithData <- function() {
 
   # Test anonymous zoo series
   set.seed(1)
-  data <- zoo(cbind(rnorm(200), rnorm(200), rnorm(200)))
+  data <- zoo::zoo(cbind(rnorm(200), rnorm(200), rnorm(200)))
   pre.period <- c(1, 100)
   post.period <- c(101, 200)
   model.args <- list(niter = 100)
@@ -244,7 +244,7 @@ TestCausalImpact.RunWithData <- function() {
   checkEquals(names(impact$series)[1], "response")
   #
   # Named zoo series
-  data <- zoo(cbind(rnorm(200), rnorm(200), rnorm(200)))
+  data <- zoo::zoo(cbind(rnorm(200), rnorm(200), rnorm(200)))
   names(data) <- c("a", "b", "c")
   impact <- CausalImpact(data, pre.period, post.period, model.args)
   checkEquals(names(impact$series)[1], "response")
@@ -276,7 +276,7 @@ TestCausalImpact.RunWithData <- function() {
 
   # Test missing data (NA) in pre-period response variable
   set.seed(1)
-  data <- zoo(cbind(rnorm(200), rnorm(200), rnorm(200)))
+  data <- zoo::zoo(cbind(rnorm(200), rnorm(200), rnorm(200)))
   data[3:5, 1] <- NA
   pre.period <- c(1, 100)
   post.period <- c(101, 200)
@@ -302,7 +302,7 @@ TestCausalImpact.RunWithData <- function() {
   model.args <- list(niter = 100)
   impact <- CausalImpact(data, pre.period, post.period, model.args)
   checkTrue(all(is.na(impact$series[1 : (pre.period[1] - 1), -c(1, 2)])))
-  checkEquals(impact$series$response, zoo(data))
+  checkEquals(impact$series$response, zoo::zoo(data))
 
   # Test post-period that does not last until the end of the data
   set.seed(1)
@@ -313,7 +313,7 @@ TestCausalImpact.RunWithData <- function() {
   impact <- CausalImpact(data, pre.period, post.period, model.args)
   checkTrue(all(is.na(window(impact$series,
                              start = post.period[2] + 1)[, -1])))
-  checkEquals(impact$series$response, zoo(data))
+  checkEquals(impact$series$response, zoo::zoo(data))
 
   # Test with/without <standardize.data>
   set.seed(1)
@@ -324,8 +324,8 @@ TestCausalImpact.RunWithData <- function() {
   impact1 <- CausalImpact(data, pre.period, post.period, model.args)
   model.args <- list(niter = 10000, standardize.data = TRUE)
   impact2 <- CausalImpact(data, pre.period, post.period, model.args)
-  checkEquals(impact1$series$response, zoo(data))
-  checkEquals(impact2$series$response, zoo(data))
+  checkEquals(impact1$series$response, zoo::zoo(data))
+  checkEquals(impact2$series$response, zoo::zoo(data))
   checkEquals(impact1$series$response, impact2$series$response,
               tolerance = 0.001)
   checkEquals(impact1$series, impact2$series, tolerance = 0.1)
@@ -353,7 +353,7 @@ TestCausalImpact.RunWithData <- function() {
   checkEquals(as.vector(estimates2)[2], 1, tolerance = 0.05)
 
   # Test daily data (zoo object)
-  data <- zoo(cbind(rnorm(200), rnorm(200), rnorm(200)),
+  data <- zoo::zoo(cbind(rnorm(200), rnorm(200), rnorm(200)),
               seq.Date(as.Date("2014-01-01"), as.Date("2014-01-01") + 199,
                        by = 1))
   pre.period <- as.Date(c("2014-01-01", "2014-04-10"))  # 100 days
@@ -368,7 +368,7 @@ TestCausalImpact.RunWithData <- function() {
   dates <- seq(as.Date("2013-01-01"), as.Date("2013-01-04"), by = 1)
   y <- c(1, 2, 3, 5);
   x <- c(1, 2, 3, 4);
-  data <- zoo(cbind(y, x), dates)
+  data <- zoo::zoo(cbind(y, x), dates)
   pre.period <- as.Date(c("2013-01-01", "2013-01-03"))
   post.period <- as.Date(c("2013-01-04", "2013-01-04"))
   model.args <- list(niter = 100)
@@ -378,12 +378,12 @@ TestCausalImpact.RunWithData <- function() {
   # Test <data> where inference is aborted
   y <- c(1, 1, 1, 1);
   x <- c(1, 2, 3, 4);
-  data <- zoo(cbind(y, x))
+  data <- zoo::zoo(cbind(y, x))
   pre.period <- c(1, 3)
   post.period <- c(4, 4)
   impact <- CausalImpact(data, pre.period, post.period)
-  checkEquals(impact$series$response, as.zoo(y))
-  checkEquals(impact$series$cum.response, as.zoo(cumsum(y)))
+  checkEquals(impact$series$response, zoo::as.zoo(y))
+  checkEquals(impact$series$cum.response, zoo::as.zoo(cumsum(y)))
   checkTrue(all(is.na(impact$series[, -c(1, 2)])))
   checkTrue(is.null(impact$summary))
   checkTrue(is.null(impact$report))
@@ -401,7 +401,7 @@ TestCausalImpact.RunWithBstsModel <- function() {
   y[101 : 200] <- NA
   X <- cbind(rnorm(200), rnorm(200))
   ss <- AddLocalLinearTrend(list(), y)
-  bsts.model <- bsts(y ~ X, ss, niter = 100, ping = 0)
+  bsts.model <- bsts::bsts(y ~ X, ss, niter = 100, ping = 0)
   impact <- CausalImpact(bsts.model = bsts.model,
                          post.period.response = post.period.response)
   checkEquals(names(impact), c("series", "summary", "report", "model"))
@@ -413,11 +413,11 @@ TestCausalImpact.RunWithBstsModel <- function() {
   CallAllS3Methods(impact)
 
   # Test on a bsts object that has been fitted on a zoo object with daily data
-  y <- zoo(rnorm(10), seq.Date(as.Date("2014-01-01"), by = 1, length = 10))
+  y <- zoo::zoo(rnorm(10), seq.Date(as.Date("2014-01-01"), by = 1, length = 10))
   X <- as.vector(y) + rnorm(length(y))
   y[6 : 10] <- NA
   ss <- AddLocalLinearTrend(list(), y)
-  bsts.model <- bsts(y ~ X, ss, niter = 100, ping = 0)
+  bsts.model <- bsts::bsts(y ~ X, ss, niter = 100, ping = 0)
   impact <- CausalImpact(bsts.model = bsts.model,
                          post.period.response = rnorm(5))
   checkEquals(time(impact$series), time(y))
@@ -432,7 +432,7 @@ TestCausalImpact.RunWithBstsModel <- function() {
   y[101 : 200] <- NA
   X <- cbind(rnorm(200), rnorm(200))
   ss <- AddLocalLinearTrend(list(), y)
-  bsts.model <- bsts(y ~ X, ss, niter = 100, ping = 0)
+  bsts.model <- bsts::bsts(y ~ X, ss, niter = 100, ping = 0)
   impact <- CausalImpact(bsts.model = bsts.model,
                          post.period.response = post.period.response)
   checkEquals(nrow(impact$series), length(y))
@@ -450,7 +450,7 @@ TestCausalImpact.RunWithBstsModel <- function() {
     checkTrue(all(is.na(as.data.frame(impact$series)[[na.col]][3:5])))
     checkTrue(all(!is.na(as.data.frame(impact$series)[[na.col]][-c(3:5)])))
   }
-  
+
   # Test bsts.model that has been fitted on data not conforming to the usual
   # pre/post scheme
   bad.y <- list(c(1, 2, 3, 4, 5, 6),
@@ -464,7 +464,7 @@ TestCausalImpact.RunWithBstsModel <- function() {
     post.period.response <- corresponding.post.period.response[[i]]
     X <- rnorm(length(y))
     ss <- AddLocalLinearTrend(list(), y)
-    bsts.model <- bsts(y ~ X, ss, niter = 100, ping = 0)
+    bsts.model <- bsts::bsts(y ~ X, ss, niter = 100, ping = 0)
     checkException(CausalImpact(bsts.model = bsts.model,
                                 post.period.response = post.period.response))
   }
@@ -484,7 +484,7 @@ TestPrintSummary <- function() {
   PrintSummary <- CausalImpact:::PrintSummary
 
   set.seed(1)
-  data <- zoo(cbind(c(rnorm(100), rnorm(100) + 1), rnorm(200), rnorm(200)))
+  data <- zoo::zoo(cbind(c(rnorm(100), rnorm(100) + 1), rnorm(200), rnorm(200)))
   pre.period <- c(1, 100)
   post.period <- c(101, 200)
   model.args <- list(niter = 100)

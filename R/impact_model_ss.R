@@ -43,7 +43,7 @@ ObservationsAreIllConditioned <- function(y) {
   # Returns:
   #   TRUE if something is wrong with the observations; FALSE otherwise.
 
-  assert_that(!is.null(y), length(y) >= 1)
+  assertthat::assert_that(!is.null(y), length(y) >= 1)
   ill.conditioned <- FALSE
 
   # All NA?
@@ -79,13 +79,13 @@ FormatInputForConstructModel <- function(data, model.args) {
   #   list of checked and correctly formatted arguments
 
   # Check <data>
-  assert_that(!is.null(data))
-  data <- as.zoo(data)
+  assertthat::assert_that(!is.null(data))
+  data <- zoo::as.zoo(data)
   if (is.null(ncol(data))) {
     dim(data) <- c(length(data), 1)
   }
-  assert_that(is.numeric(data))
-  assert_that(nrow(data) > 0)
+  assertthat::assert_that(is.numeric(data))
+  assertthat::assert_that(nrow(data) > 0)
 
   # If <data> has no names, assign: y, x1, x2, ...
   if (is.null(names(data))) {
@@ -107,10 +107,10 @@ FormatInputForConstructModel <- function(data, model.args) {
 
   # Check those parts of <model.args> that are used in this file
   # Check <niter>
-  assert_that(length(model.args$niter) == 1)
-  assert_that(is.numeric(model.args$niter))
-  assert_that(!is.na(model.args$niter))
-  assert_that(is.wholenumber(model.args$niter))
+  assertthat::assert_that(length(model.args$niter) == 1)
+  assertthat::assert_that(is.numeric(model.args$niter))
+  assertthat::assert_that(!is.na(model.args$niter))
+  assertthat::assert_that(is.wholenumber(model.args$niter))
   model.args$niter <- round(model.args$niter)
   assert(model.args$niter >= 10,
          "must draw, at the very least, 10 MCMC samples; recommending 1000")
@@ -119,30 +119,30 @@ FormatInputForConstructModel <- function(data, model.args) {
   }
 
   # Check <prior.level.sd>
-  assert_that(is.numeric(model.args$prior.level.sd))
-  assert_that(!is.na(model.args$prior.level.sd))
-  assert_that(length(model.args$prior.level.sd) == 1)
-  assert_that(model.args$prior.level.sd > 0)
+  assertthat::assert_that(is.numeric(model.args$prior.level.sd))
+  assertthat::assert_that(!is.na(model.args$prior.level.sd))
+  assertthat::assert_that(length(model.args$prior.level.sd) == 1)
+  assertthat::assert_that(model.args$prior.level.sd > 0)
 
   # Check <nseasons>
-  assert_that(length(model.args$nseasons) == 1)
-  assert_that(is.numeric(model.args$nseasons))
-  assert_that(!is.na(model.args$nseasons))
-  assert_that(is.wholenumber(model.args$nseasons))
+  assertthat::assert_that(length(model.args$nseasons) == 1)
+  assertthat::assert_that(is.numeric(model.args$nseasons))
+  assertthat::assert_that(!is.na(model.args$nseasons))
+  assertthat::assert_that(is.wholenumber(model.args$nseasons))
   assert(model.args$nseasons >= 1,
          "nseasons cannot be 0; use 1 in order not to have seaonsal components")
 
   # Check <season.duration>
-  assert_that(length(model.args$season.duration) == 1)
-  assert_that(is.numeric(model.args$season.duration))
-  assert_that(!is.na(model.args$season.duration))
-  assert_that(is.wholenumber(model.args$season.duration))
-  assert_that(model.args$season.duration >= 1)
+  assertthat::assert_that(length(model.args$season.duration) == 1)
+  assertthat::assert_that(is.numeric(model.args$season.duration))
+  assertthat::assert_that(!is.na(model.args$season.duration))
+  assertthat::assert_that(is.wholenumber(model.args$season.duration))
+  assertthat::assert_that(model.args$season.duration >= 1)
 
   # Check <dynamic.regression>
-  assert_that(is.logical(model.args$dynamic.regression))
-  assert_that(!is.na(model.args$dynamic.regression))
-  assert_that(length(model.args$dynamic.regression) == 1)
+  assertthat::assert_that(is.logical(model.args$dynamic.regression))
+  assertthat::assert_that(!is.na(model.args$dynamic.regression))
+  assertthat::assert_that(length(model.args$dynamic.regression) == 1)
 
   # Return updated args
   return(list(data = data, model.args = model.args))
@@ -184,21 +184,21 @@ ConstructModel <- function(data, model.args = NULL) {
   # sigma.guess: standard deviation of the random walk of the level
   sdy <- sd(y, na.rm = TRUE)
   ss <- list()
-  sd.prior <- SdPrior(sigma.guess = model.args$prior.level.sd * sdy,
+  sd.prior <- Boom::SdPrior(sigma.guess = model.args$prior.level.sd * sdy,
                       upper.limit = sdy,
                       sample.size = kLocalLevelPriorSampleSize)
-  ss <- AddLocalLevel(ss, y, sigma.prior = sd.prior)
+  ss <- bsts::AddLocalLevel(ss, y, sigma.prior = sd.prior)
 
   # Add seasonal component?
   if (model.args$nseasons > 1) {
-    ss <- AddSeasonal(ss, y,
+    ss <- bsts::AddSeasonal(ss, y,
                       nseasons = model.args$nseasons,
                       season.duration = model.args$season.duration)
   }
 
   # No regression?
   if (ncol(data) == 1) {
-    bsts.model <- bsts(y, state.specification = ss, niter = model.args$niter,
+    bsts.model <- bsts::bsts(y, state.specification = ss, niter = model.args$niter,
                        ping = 0, save.prediction.errors = TRUE, seed = 1)
 
   } else {
@@ -206,14 +206,14 @@ ConstructModel <- function(data, model.args = NULL) {
 
     # Static regression?
     if (!model.args$dynamic.regression) {
-      bsts.model <- bsts(formula, data = data, state.specification = ss,
+      bsts.model <- bsts::bsts(formula, data = data, state.specification = ss,
                          expected.model.size =
                              kStaticRegressionExpectedModelSize,
                          expected.r2 = kStaticRegressionExpectedR2,
                          prior.df = kStaticRegressionPriorDf,
                          save.prediction.errors = TRUE,
                          niter = model.args$niter, seed = 1, ping = 0)
-      time(bsts.model$original.series) <- time(data)
+      zoo::time(bsts.model$original.series) <- time(data)
 
     # Dynamic regression?
     } else {
@@ -226,10 +226,10 @@ ConstructModel <- function(data, model.args = NULL) {
       sigma.mean.prior <- GammaPrior(prior.mean = 1, a = 4)
       ss <- AddDynamicRegression(ss, formula, data = data,
                                  sigma.mean.prior = sigma.mean.prior)
-      sd.prior <- SdPrior(sigma.guess = model.args$prior.level.sd * sdy,
+      sd.prior <- Boom::SdPrior(sigma.guess = model.args$prior.level.sd * sdy,
                           upper.limit = 0.1 * sdy,
                           sample.size = kDynamicRegressionPriorSampleSize)
-      bsts.model <- bsts(y, state.specification = ss, niter = model.args$niter,
+      bsts.model <- bsts::bsts(y, state.specification = ss, niter = model.args$niter,
                          expected.model.size = 3, ping = 0, seed = 1,
                          prior = sd.prior)
     }

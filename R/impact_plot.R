@@ -28,7 +28,7 @@ CreateDataFrameForPlot <- function(impact) {
   #   data frame of: time, response, mean, lower, upper, metric
 
   # Check input
-  assert_that((class(impact) == "CausalImpact"))
+  assertthat::assert_that((class(impact) == "CausalImpact"))
   assert(!isTRUE(all(is.na(impact$series[, -c(1, 2)]))),
          "inference was aborted; cannot create plot")
 
@@ -105,40 +105,40 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
   data <- CreateDataFrameForPlot(impact)
 
   # Select metrics to display (and their order)
-  assert_that(is.vector(metrics))
+  assertthat::assert_that(is.vector(metrics))
   metrics <- sapply(metrics, function(m) match.arg(m, c("original", "pointwise",
                                                         "cumulative")))
   data <- data[data$metric %in% metrics, ]
   data$metric <- factor(data$metric, metrics)
 
   # Initialize plot
-  q <- ggplot(data, aes(x = time)) + theme_bw(base_size = 15)
-  q <- q + xlab("") + ylab("")
+  q <- ggplot2::ggplot(data, ggplot2::aes(x = time)) + ggplot2::theme_bw(base_size = 15)
+  q <- q + ggplot2::xlab("") + ggplot2::ylab("")
   if (length(metrics) > 1) {
-    q <- q + facet_grid(metric ~ ., scales = "free_y")
+    q <- q + ggplot2::facet_grid(metric ~ ., scales = "free_y")
   }
 
   # Add prediction intervals
-  q <- q + geom_ribbon(aes(ymin = lower, ymax = upper),
+  q <- q + ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper),
                        data, fill = "SlateGray2")
 
   # Add pre-period markers
   xintercept <- CreatePeriodMarkers(impact$model$pre.period,
                                     impact$model$post.period,
                                     range(data$t))
-  q <- q + geom_vline(xintercept = xintercept,
+  q <- q + ggplot2::geom_vline(xintercept = xintercept,
                       colour = "darkgrey", size = 0.8, linetype = "dashed")
 
   # Add zero line to pointwise and cumulative plot
-  q <- q + geom_line(aes(y = baseline),
+  q <- q + ggplot2::geom_line(aes(y = baseline),
                      colour = "darkgrey", size = 0.8, linetype = "solid")
 
   # Add point predictions
-  q <- q + geom_line(aes(y = mean), data,
+  q <- q + ggplot2::geom_line(aes(y = mean), data,
                      size = 0.6, colour = "darkblue", linetype = "dashed")
 
   # Add observed data
-  q <- q + geom_line(aes(y = response), size = 0.6)
+  q <- q + ggplot2::geom_line(aes(y = response), size = 0.6)
   return(q)
 }
 

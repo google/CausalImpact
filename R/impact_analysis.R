@@ -46,7 +46,7 @@ FormatInputData <- function(data) {
   # If <data> is a data frame and the first column is 'date', try to convert
   if (is.data.frame(data) && tolower(names(data)[1]) %in% c("date", "time")) {
     if (class(data$date) == "Date") {
-      data <- zoo(data[, -1], data$date)
+      data <- zoo::zoo(data[, -1], data$date)
     } else {
       warning(paste0("Did you mean: data = zoo(data[, -1], data$",
                      names(data)[1], ")"))
@@ -54,7 +54,7 @@ FormatInputData <- function(data) {
   }
 
   # Try to convert to zoo object
-  data <- TryStop(as.zoo(data), "could not convert input data to zoo object")
+  data <- TryStop(zoo::as.zoo(data), "could not convert input data to zoo object")
 
   # Ensure <data> is formatted in such a way that rows represent time points
   if (is.null(ncol(data))) {
@@ -62,11 +62,11 @@ FormatInputData <- function(data) {
   }
 
   # Must have at least 3 time points
-  assert_that(nrow(data) > 3)
+  assertthat::assert_that(nrow(data) > 3)
 
   # Must not have NA in covariates (if any)
   if (ncol(data) >= 2) {
-    assert_that(!any(is.na(data[, -1])))
+    assertthat::assert_that(!any(is.na(data[, -1])))
   }
   return(data)
 }
@@ -80,10 +80,10 @@ FormatInputPrePostPeriod <- function(pre.period, post.period, data) {
   #   post.period: two-element vector
   #   data: already-checked zoo object, for reference only
 
-  assert_that(!is.null(pre.period))
-  assert_that(!is.null(post.period))
-  assert_that(length(pre.period) == 2, length(post.period) == 2)
-  assert_that(!any(is.na(pre.period)), !any(is.na(post.period)))
+  assertthat::assert_that(!is.null(pre.period))
+  assertthat::assert_that(!is.null(post.period))
+  assertthat::assert_that(length(pre.period) == 2, length(post.period) == 2)
+  assertthat::assert_that(!any(is.na(pre.period)), !any(is.na(post.period)))
   if (class(time(data)) != class(pre.period) ||
       class(time(data)) != class(post.period)) {
     if (class(time(data)) == "integer") {
@@ -112,8 +112,8 @@ FormatInputPrePostPeriod <- function(pre.period, post.period, data) {
   }
   assert(pre.period[2] - pre.period[1] + 1 >= 3,
          "pre.period must span at least 3 time points")
-  assert_that(post.period[2] >= post.period[1])
-  assert_that(post.period[1] > pre.period[2])
+  assertthat::assert_that(post.period[2] >= post.period[1])
+  assertthat::assert_that(post.period[1] > pre.period[2])
   return(list(pre.period = pre.period, post.period = post.period))
 }
 
@@ -163,27 +163,27 @@ FormatInputForCausalImpact <- function(data, pre.period, post.period,
   # fields will be checked in FormatInputForConstructModel().
   #
   # Check <standardize.data>
-  assert_that(length(model.args$standardize.data) == 1)
-  assert_that(is.logical(model.args$standardize.data))
-  assert_that(!is.na(model.args$standardize.data))
+  assertthat::assert_that(length(model.args$standardize.data) == 1)
+  assertthat::assert_that(is.logical(model.args$standardize.data))
+  assertthat::assert_that(!is.na(model.args$standardize.data))
 
   # Check <bsts.model>
   if (!is.null(bsts.model)) {
-    assert_that(class(bsts.model) == "bsts")
+    assertthat::assert_that(class(bsts.model) == "bsts")
   }
 
   # Check <post.period.response>
   if (!is.null(bsts.model)) {
-    assert_that(!is.null(post.period.response),
+    assertthat::assert_that(!is.null(post.period.response),
                 is.vector(post.period.response),
                 is.numeric(post.period.response))
   }
 
   # Check <alpha>
-  assert_that(is.numeric(alpha))
-  assert_that(length(alpha) == 1)
-  assert_that(!is.na(alpha))
-  assert_that(alpha > 0, alpha < 1)
+  assertthat::assert_that(is.numeric(alpha))
+  assertthat::assert_that(length(alpha) == 1)
+  assertthat::assert_that(!is.na(alpha))
+  assertthat::assert_that(alpha > 0, alpha < 1)
 
   # Return updated arguments
   return(list(data = data, pre.period = pre.period, post.period = post.period,
@@ -288,7 +288,7 @@ CausalImpact <- function(data = NULL,
   #
   #   post.period.response <- y[post.period[1] : post.period[2]]
   #   post.period.response[post.period[1] : post.period[2]] <- NA
-  #   ss <- AddLocalLevel(list(), y)
+  #   ss <- bsts::AddLocalLevel(list(), y)
   #   bsts.model <- bsts(y ~ x1, ss, niter = 1000)
   #   impact <- CausalImpact(bsts.model = bsts.model,
   #                          post.period.response = post.period.response)
@@ -359,9 +359,9 @@ RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
   }
 
   # Extend <series> to cover original range (padding with NA as necessary)
-  empty <- zoo(, time(data))
+  empty <- zoo::zoo( , time(data))
   inferences$series <- merge(inferences$series, empty, all = TRUE)
-  assert_that(nrow(inferences$series) == nrow(data))
+  assertthat::assert_that(nrow(inferences$series) == nrow(data))
 
   # Replace <y.model> by full original response
   inferences$series[, 1] <- data[, 1]
@@ -441,7 +441,7 @@ PrintSummary <- function(impact, digits = 2L) {
   #   digits: Number of digits to print for all numbers.
 
   # Check input
-  assert_that(class(impact) == "CausalImpact")
+  assertthat::assert_that(class(impact) == "CausalImpact")
   summary <- impact$summary
   alpha <- impact$model$alpha
   assert(!is.null(alpha) && alpha > 0,
@@ -522,7 +522,7 @@ PrintReport <- function(impact) {
   #   impact: A \code{CausalImpact} results object, as returned by
   #           \code{CausalImpact()}.
 
-  assert_that(class(impact) == "CausalImpact")
+  assertthat::assert_that(class(impact) == "CausalImpact")
   cat("Analysis report {CausalImpact}\n")
   if (is.null(impact$report)) {
     cat("(Report empty)")

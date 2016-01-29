@@ -35,8 +35,8 @@ repmat <- function(X, m, n) {
   #   #      [,1] [,2] [,3] [,4]
   #   # [1,]   10   20   10   20
 
-  assert_that(is.vector(X) || is.matrix(X))
-  assert_that(is.count(m), is.count(n))
+  assertthat::assert_that(is.vector(X) || is.matrix(X))
+  assertthat::assert_that(assertthat::is.count(m), assertthat::is.count(n))
   if (is.vector(X)) {
     X <- t(as.matrix(X))
   }
@@ -184,9 +184,9 @@ ParseArguments <- function(args, defaults, allow.extra.args = FALSE) {
   #   # Result: a = 10, b = 2
 
   # Check input
-  assert_that(!is.null(defaults))
-  assert_that(is.list(defaults))
-  assert_that(is.list(args) || is.null(args))
+  assertthat::assert_that(!is.null(defaults))
+  assertthat::assert_that(is.list(defaults))
+  assertthat::assert_that(is.list(args) || is.null(args))
 
   # Merge
   if (is.null(args)) {
@@ -230,7 +230,7 @@ Standardize <- function(y) {
   #   y <- result$UnStandardize(result$y)
   #   stopifnot(isTRUE(all.equal(x, y)))
 
-  assert_that(is.null(dim(y)))
+  assertthat::assert_that(is.null(dim(y)))
   y.mu <- mean(y, na.rm = TRUE)
   if (is.nan(y.mu)) {
     y.mu <- as.numeric(NA)
@@ -297,15 +297,15 @@ InferPeriodIndicesFromData <- function(y) {
   #   # $post.period
   #   # [1] 5 7
 
-  assert_that(is.numeric(y))
-  assert_that(length(y) >= 2)
-  assert_that(is.na(tail(y, 1)))
+  assertthat::assert_that(is.numeric(y))
+  assertthat::assert_that(length(y) >= 2)
+  assertthat::assert_that(is.na(tail(y, 1)))
   pre.period <- rep(NA, 2)
   tmp <- which(!is.na(y))[1]
-  assert_that(length(tmp) != 0)
+  assertthat::assert_that(length(tmp) != 0)
   pre.period[1] <- tmp
   tmp <- tail(which(diff(is.na(y)) == 1), 1)
-  assert_that(length(tmp) != 0)
+  assertthat::assert_that(length(tmp) != 0)
   pre.period[2] <- tmp
   post.period <- rep(NA, 2)
   post.period[1] <- pre.period[2] + 1

@@ -30,7 +30,7 @@ GetPosteriorStateSamples <- function(bsts.model) {
 
   # Get state contributions (e.g., 1000 samples x 2 states x 365 time pts),
   # discarding burn-in samples (=> 900 x 2 x 365)
-  burn <- SuggestBurn(0.1, bsts.model)
+  burn <- bsts::SuggestBurn(0.1, bsts.model)
   assert(burn > 0)
   state.contributions <- bsts.model$state.contributions[-(1 : burn), , ,
                                                         drop = FALSE]
@@ -58,7 +58,7 @@ ComputeResponseTrajectories <- function(bsts.model) {
   state.samples <- GetPosteriorStateSamples(bsts.model)
 
   # Get observation noise standard deviation samples
-  burn <- SuggestBurn(0.1, bsts.model)
+  burn <- bsts::SuggestBurn(0.1, bsts.model)
   assert(burn > 0)
   sigma.obs <- bsts.model$sigma.obs[-(1 : burn)]  # e.g., 900
 
@@ -236,7 +236,7 @@ CompileSummaryTable <- function(y.post, y.samples.post,
                                    prob.upper)),
       AbsEffect.sd = c(sd(rowMeans(y.repmat.post - y.samples.post)),
                        sd(rowSums(y.repmat.post - y.samples.post))))
-  summary <- mutate(summary, RelEffect = AbsEffect / Pred,
+  summary <- dplyr::mutate(summary, RelEffect = AbsEffect / Pred,
                     RelEffect.lower = AbsEffect.lower / Pred,
                     RelEffect.upper = AbsEffect.upper / Pred,
                     RelEffect.sd = AbsEffect.sd / Pred)
@@ -432,31 +432,31 @@ CheckInputForCompilePosteriorInferences <- function(bsts.model, y.post, alpha,
   #   list of checked arguments
 
   # Check <bsts.model>
-  assert_that(!is.null(bsts.model))
-  assert_that(class(bsts.model) == "bsts")
-  assert_that(length(bsts.model$original.series) >= 2)
+  assertthat::assert_that(!is.null(bsts.model))
+  assertthat::assert_that(class(bsts.model) == "bsts")
+  assertthat::assert_that(length(bsts.model$original.series) >= 2)
 
   # Check <y.post>
-  assert_that(is.zoo(y.post) || is.vector(y.post))
+  assertthat::assert_that(zoo::is.zoo(y.post) || is.vector(y.post))
   y.post <- as.vector(y.post)
-  assert_that(is.numeric(y.post))
-  assert_that(length(y.post) >= 1)
+  assertthat::assert_that(is.numeric(y.post))
+  assertthat::assert_that(length(y.post) >= 1)
   assert(!any(is.na(y.post)), "NA values in y.post not currently supported")
   assert(all(is.na(tail(bsts.model$original.series, length(y.post)))),
          paste0("bsts.model$original.series must end on a stretch of NA ",
                 "values at least as long as y.post"))
 
   # Check <alpha>
-  assert_that(is.numeric(alpha))
-  assert_that(length(alpha) == 1)
-  assert_that(!is.na(alpha))
-  assert_that(alpha > 0, alpha < 1)
+  assertthat::assert_that(is.numeric(alpha))
+  assertthat::assert_that(length(alpha) == 1)
+  assertthat::assert_that(!is.na(alpha))
+  assertthat::assert_that(alpha > 0, alpha < 1)
 
   # Check <UnStandardize>
-  assert_that(is.function(UnStandardize))
-  assert_that(is.scalar(UnStandardize(1)))
-  assert_that(is.numeric(UnStandardize(1)))
-  assert_that(length(UnStandardize(c(1, 2))) == 2)
+  assertthat::assert_that(is.function(UnStandardize))
+  assertthat::assert_that(lambda.tools::is.scalar(UnStandardize(1)))
+  assertthat::assert_that(is.numeric(UnStandardize(1)))
+  assertthat::assert_that(length(UnStandardize(c(1, 2))) == 2)
 
   # Return arguments
   return(list(bsts.model = bsts.model,
@@ -525,7 +525,7 @@ CompilePosteriorInferences <- function(bsts.model, y.post, alpha = 0.05,
   y.model <- y
   y.model[is.post.period] <- y.post
   cum.y.model <- cumsum.na.rm(y.model)
-  series <- zoo(data.frame(y.model, cum.y.model, point.pred, cum.pred), time(y))
+  series <- zoo::zoo(data.frame(y.model, cum.y.model, point.pred, cum.pred), time(y))
   series$point.effect <- series$y.model - series$point.pred
   series$point.effect.lower <- series$y.model - series$point.pred.upper
   series$point.effect.upper <- series$y.model - series$point.pred.lower
@@ -549,8 +549,8 @@ CompileNaInferences <- function(y.model) {
   #   y.model: actual observed response in the modeling period (zoo object)
 
   # Check input
-  assert_that(is.zoo(y.model))
-  assert_that(length(y.model) >= 1)
+  assertthat::assert_that(zoo::is.zoo(y.model))
+  assertthat::assert_that(length(y.model) >= 1)
 
   # Create NA inferences
   vars <- c("point.pred", "point.pred.lower", "point.pred.upper",
@@ -558,12 +558,12 @@ CompileNaInferences <- function(y.model) {
             "point.effect", "point.effect.lower", "point.effect.upper",
             "cum.effect", "cum.effect.lower", "cum.effect.upper")
   na.series <- matrix(as.numeric(NA), nrow = length(y.model), ncol = 12)
-  na.series <- zoo(na.series, time(y.model))
+  na.series <- zoo::zoo(na.series, time(y.model))
   names(na.series) <- vars
 
   # Insert observed data, as we do in CompilePosteriorInferences()
   cum.y.model <- cumsum(y.model)
-  series <- zoo(cbind(y.model = y.model, cum.y.model = cum.y.model, na.series),
+  series <- zoo::zoo(cbind(y.model = y.model, cum.y.model = cum.y.model, na.series),
                 time(y.model))
 
   # Return NA <series> and NULL <summary>

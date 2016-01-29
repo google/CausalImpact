@@ -109,7 +109,7 @@ It is often more natural to feed a time-series object into `CausalImpact()` rath
 
 ```{r}
 time.points <- seq.Date(as.Date("2014-01-01"), by = 1, length.out = 100)
-data <- zoo(cbind(y, x1), time.points)
+data <- zoo::zoo(cbind(y, x1), time.points)
 head(data)
 ```
 
@@ -188,12 +188,12 @@ y[post.period[1] : post.period[2]] <- NA
 
 We next set up and estimate a time-series model using the bsts package. Here is a simple example:
 ```{r, echo=FALSE}
-ss <- AddLocalLevel(list(), y)
-bsts.model <- bsts(y ~ x1, ss, niter = 1000, ping = 0)
+ss <- bsts::AddLocalLevel(list(), y)
+bsts.model <- bsts::bsts(y ~ x1, ss, niter = 1000, ping = 0)
 ```
 ```{r, eval=FALSE}
-ss <- AddLocalLevel(list(), y)
-bsts.model <- bsts(y ~ x1, ss, niter = 1000)
+ss <- bsts::AddLocalLevel(list(), y)
+bsts.model <- bsts::bsts(y ~ x1, ss, niter = 1000)
 ```
 
 Finally, we call `CausalImpact()`. Instead of providing input data, we simply pass in the fitted model object (`bsts.model`). We also need to provide the actual observed response. This is needed so that the package can compute the difference between predicted response (stored in `bsts.model`) and actual observed response (stored in `post.period.response`).

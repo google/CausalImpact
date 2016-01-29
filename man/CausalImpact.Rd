@@ -235,8 +235,8 @@ names(impact)
 
 post.period.response <- y[post.period[1] : post.period[2]]
 y[post.period[1] : post.period[2]] <- NA
-ss <- AddLocalLevel(list(), y)
-bsts.model <- bsts(y ~ x1, ss, niter = 1000)
+ss <- bsts::AddLocalLevel(list(), y)
+bsts.model <- bsts::bsts(y ~ x1, ss, niter = 1000)
 impact <- CausalImpact(bsts.model = bsts.model,
                        post.period.response = post.period.response)
 plot(impact)
