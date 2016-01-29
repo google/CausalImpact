@@ -8,3 +8,4 @@
 .Rhistory
 # Rmd temp output
 CausalImpact_files/
+.Rproj.user
