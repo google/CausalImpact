@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ------------------------------------------------------------------------------
 # Bayesian dynamic diffusion-regression state-space model for computing
 # counterfactual predictions in a time series. Uses an MCMC algorithm
 # implemented in the \code{bsts} package to compute samples from the posterior
@@ -31,7 +30,6 @@ kStaticRegressionExpectedR2 <- 0.8
 kStaticRegressionPriorDf <- 50
 kDynamicRegressionPriorSampleSize <- 32
 
-# ------------------------------------------------------------------------------
 ObservationsAreIllConditioned <- function(y) {
   # Checks whether the response variable (i.e., the series of observations for
   # the dependent variable y) are ill-conditioned. For example, the series might
@@ -65,7 +63,6 @@ ObservationsAreIllConditioned <- function(y) {
   return(ill.conditioned)
 }
 
-# ------------------------------------------------------------------------------
 FormatInputForConstructModel <- function(data, model.args) {
   # Checks the input arguments supplied to ConstructModel(). Missing arguments
   # in \code{model.args} will be filled using \code{.defaults} (see top of file
@@ -148,7 +145,6 @@ FormatInputForConstructModel <- function(data, model.args) {
   return(list(data = data, model.args = model.args))
 }
 
-# ------------------------------------------------------------------------------
 ConstructModel <- function(data, model.args = NULL) {
   # Specifies the model and performs inference. Inference means using the data
   # to pass from a prior distribution over parameters and states to a posterior

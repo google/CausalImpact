@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ------------------------------------------------------------------------------
 # Unit tests for impact_plot.R.
 #
 # Author: kbrodersen@google.com (Kay Brodersen)
 
-# ------------------------------------------------------------------------------
 TestCreateImpactPlot <- function() {
   CreateImpactPlot <- CausalImpact:::CreateImpactPlot
 
@@ -56,6 +54,17 @@ TestCreateImpactPlot <- function() {
   q2 <- plot(impact, c("original", "pointwise", "cumulative"))
   q3 <- plot(impact, c("o", "point", "c"))
   checkEquals(q1, q2)
+  # As of ggplot 2.0.0, `q1` and `q2` are still the same but `q3` is different.
+  # This is because `q1` and `q2` contains:
+  # > q1$plot_env$metrics
+  #   original    pointwise   cumulative
+  #  "original"  "pointwise" "cumulative"
+  # Whereas `q3` contains:
+  # > q3$plot_env$metrics
+  #          o        point            c
+  #  "original"  "pointwise" "cumulative"
+  # So we test whether `q1` equals `q3` except for `$plot_env$metrics`.
+  q3$plot_env$metrics <- q2$plot_env$metrics
   checkEquals(q1, q3)
 
   # Test different order

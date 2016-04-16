@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ------------------------------------------------------------------------------
 # Unit tests for impact_inference.R.
 #
 # Author: kbrodersen@google.com (Kay Brodersen)
 
-# ------------------------------------------------------------------------------
 TestGetPosteriorStateSamples <- function() {
   GetPosteriorStateSamples <- CausalImpact:::GetPosteriorStateSamples
   ConstructModel <- CausalImpact:::ConstructModel
@@ -32,10 +30,9 @@ TestGetPosteriorStateSamples <- function() {
   # Create a healthy bsts.object and test it
   bsts.object <- ConstructModel(data, model.args)
   state.samples <- GetPosteriorStateSamples(bsts.object)
-  checkEquals(dim(state.samples), c(90, 365))
+  checkEquals(ncol(state.samples), 365)
 }
 
-# ------------------------------------------------------------------------------
 TestComputeResponseTrajectories <- function() {
   ComputeResponseTrajectories <- CausalImpact:::ComputeResponseTrajectories
   ConstructModel <- CausalImpact:::ConstructModel
@@ -48,10 +45,9 @@ TestComputeResponseTrajectories <- function() {
   model.args <- list(niter = 100)
   bsts.object <- ConstructModel(data, model.args)
   y.samples <- ComputeResponseTrajectories(bsts.object)
-  checkEquals(dim(y.samples), c(90, 365))
+  checkEquals(ncol(y.samples), 365)
 }
 
-# ------------------------------------------------------------------------------
 TestComputePointPredictions <- function() {
   ComputePointPredictions <- CausalImpact:::ComputePointPredictions
 
@@ -67,7 +63,6 @@ TestComputePointPredictions <- function() {
                                    "point.pred.upper"))
 }
 
-# ------------------------------------------------------------------------------
 TestComputeCumulativePredictions <- function() {
   ComputeCumulativePredictions <- CausalImpact:::ComputeCumulativePredictions
 
@@ -104,7 +99,6 @@ TestComputeCumulativePredictions <- function() {
   checkTrue(all(!is.na(cum.pred[-3, ])))
 }
 
-# ------------------------------------------------------------------------------
 TestCompileSummaryTable <- function() {
   CompileSummaryTable <- CausalImpact:::CompileSummaryTable
 
@@ -152,7 +146,6 @@ TestCompileSummaryTable <- function() {
                                      point.pred.mean.post[1 : 9]))
 }
 
-# ------------------------------------------------------------------------------
 TestInterpretSummaryTable <- function() {
   InterpretSummaryTable <- CausalImpact:::InterpretSummaryTable
   CompileSummaryTable <- CausalImpact:::CompileSummaryTable
@@ -169,7 +162,6 @@ TestInterpretSummaryTable <- function() {
   checkTrue(nchar(stmt) > 500)
 }
 
-# ------------------------------------------------------------------------------
 TestCheckInputForCompilePosteriorInferences <- function() {
   CheckInputForCompilePosteriorInferences <-
       CausalImpact:::CheckInputForCompilePosteriorInferences
@@ -218,7 +210,6 @@ TestCheckInputForCompilePosteriorInferences <- function() {
                                                            UnStandardize)) })
 }
 
-# ------------------------------------------------------------------------------
 TestCompilePosteriorInferences <- function() {
   CompilePosteriorInferences <- CausalImpact:::CompilePosteriorInferences
   ConstructModel <- CausalImpact:::ConstructModel
@@ -239,7 +230,7 @@ TestCompilePosteriorInferences <- function() {
                                            UnStandardize)
   checkEquals(names(inferences), c("series", "summary", "report"))
   checkEquals(inferences$series$y, zoo(rbind(data[1 : 100, 1], y.post)))
-  checkTrue(!any(is.na(inferences$series)))
+  checkTrue(!anyNA(inferences$series))
 
   # Test different <alpha>
   alpha <- 0.1
@@ -248,7 +239,6 @@ TestCompilePosteriorInferences <- function() {
   # TODO(kbrodersen) Compare summary intervals.
 }
 
-# ------------------------------------------------------------------------------
 TestCompileNaInferences <- function() {
   CompileNaInferences <- CausalImpact:::CompileNaInferences
 

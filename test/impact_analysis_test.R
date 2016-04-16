@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ------------------------------------------------------------------------------
 # Unit tests for impact_analysis.R.
 #
 # Authors: kbrodersen@google.com (Kay H. Brodersen)
@@ -25,7 +24,6 @@
       "point.effect", "point.effect.lower", "point.effect.upper",
       "cum.effect", "cum.effect.lower", "cum.effect.upper")
 
-# ------------------------------------------------------------------------------
 CallAllS3Methods <- function(impact) {
   # This function tests the various object methods that are implemented in
   # impact_analysis.R for objects of class 'CausalImpact'.
@@ -53,7 +51,6 @@ CallAllS3Methods <- function(impact) {
   plot(q)
 }
 
-# ------------------------------------------------------------------------------
 TestFormatInputForCausalImpact <- function() {
   FormatInputForCausalImpact <- CausalImpact:::FormatInputForCausalImpact
 
@@ -213,7 +210,6 @@ TestFormatInputForCausalImpact <- function() {
                                               model.args, NULL, NULL, alpha)) })
 }
 
-# ------------------------------------------------------------------------------
 TestCausalImpact.RunWithData <- function() {
 
   # Test missing input
@@ -392,7 +388,6 @@ TestCausalImpact.RunWithData <- function() {
   checkException(plot(impact))
 }
 
-# ------------------------------------------------------------------------------
 TestCausalImpact.RunWithBstsModel <- function() {
 
   # Test on a healthy bsts object
@@ -450,7 +445,7 @@ TestCausalImpact.RunWithBstsModel <- function() {
     checkTrue(all(is.na(as.data.frame(impact$series)[[na.col]][3:5])))
     checkTrue(all(!is.na(as.data.frame(impact$series)[[na.col]][-c(3:5)])))
   }
-  
+
   # Test bsts.model that has been fitted on data not conforming to the usual
   # pre/post scheme
   bad.y <- list(c(1, 2, 3, 4, 5, 6),
@@ -479,7 +474,6 @@ TestCausalImpact.RunWithBstsModel <- function() {
   })
 }
 
-# ------------------------------------------------------------------------------
 TestPrintSummary <- function() {
   PrintSummary <- CausalImpact:::PrintSummary
 
@@ -494,7 +488,6 @@ TestPrintSummary <- function() {
   PrintSummary(impact, digits = 10)
 }
 
-# ------------------------------------------------------------------------------
 TestPrintReport <- function() {
   PrintReport <- CausalImpact:::PrintReport
 
@@ -510,4 +503,12 @@ TestPrintReport <- function() {
   impact <- list(model = list(report = c("Foo.", "Bar.")))
   class(impact) <- "CausalImpact"
   PrintReport(impact)
+}
+
+TestAsCausalImpact <- function() {
+  # Test that <as.CausalImpact> is exported and visible.
+  checkTrue(is.function(as.CausalImpact))
+
+  # Test that <as.CausalImpact.default> is called on a NULL object.
+  checkException(as.CausalImpact(NULL))
 }

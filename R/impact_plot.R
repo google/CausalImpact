@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ------------------------------------------------------------------------------
 # Code for plotting the result of a CausalImpact analysis.
 #
 # Author: kbrodersen@google.com (Kay Brodersen)
 
-# ------------------------------------------------------------------------------
 CreateDataFrameForPlot <- function(impact) {
   # Creates a long-format data frame for CreateImpactPlot().
   #
@@ -60,7 +58,6 @@ CreateDataFrameForPlot <- function(impact) {
   return(data)
 }
 
-# ------------------------------------------------------------------------------
 CreatePeriodMarkers <- function(pre.period, post.period, time.range) {
   # Creates a vector of period markers to display.
   #
@@ -87,7 +84,6 @@ CreatePeriodMarkers <- function(pre.period, post.period, time.range) {
   return(as.numeric(idx))
 }
 
-# ------------------------------------------------------------------------------
 CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
                                                  "cumulative")) {
   # Creates a plot of observed data and counterfactual predictions.
@@ -142,7 +138,6 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
   return(q)
 }
 
-# ------------------------------------------------------------------------------
 plot.CausalImpact <- function(x, ...) {
   # Creates a plot of observed data and counterfactual predictions.
   #

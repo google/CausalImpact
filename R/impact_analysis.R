@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ------------------------------------------------------------------------------
 # The CausalImpact package implements inference on the causal effect of an
 # intervention on a time series. It uses a counterfactual-forecasting strategy
 # based on a Bayesian structural time-series model.
@@ -33,7 +32,6 @@
                   season.duration = 1,
                   dynamic.regression = FALSE)
 
-# ------------------------------------------------------------------------------
 FormatInputData <- function(data) {
   # Checks and formats the <data> argument provided to CausalImpact().
   #
@@ -66,12 +64,11 @@ FormatInputData <- function(data) {
 
   # Must not have NA in covariates (if any)
   if (ncol(data) >= 2) {
-    assert_that(!any(is.na(data[, -1])))
+    assert_that(!anyNA(data[, -1]))
   }
   return(data)
 }
 
-# ------------------------------------------------------------------------------
 FormatInputPrePostPeriod <- function(pre.period, post.period, data) {
   # Checks and formats the <pre.period> and <post.period> input arguments.
   #
@@ -83,7 +80,7 @@ FormatInputPrePostPeriod <- function(pre.period, post.period, data) {
   assert_that(!is.null(pre.period))
   assert_that(!is.null(post.period))
   assert_that(length(pre.period) == 2, length(post.period) == 2)
-  assert_that(!any(is.na(pre.period)), !any(is.na(post.period)))
+  assert_that(!anyNA(pre.period), !anyNA(post.period))
   if (class(time(data)) != class(pre.period) ||
       class(time(data)) != class(post.period)) {
     if (class(time(data)) == "integer") {
@@ -110,14 +107,14 @@ FormatInputPrePostPeriod <- function(pre.period, post.period, data) {
     warning(paste0("Setting post.period[2] to end of data: ", end(data)))
     post.period[2] <- end(data)
   }
-  assert(pre.period[2] - pre.period[1] + 1 >= 3,
+  data.pre.period <- window(data, start = pre.period[1], end = pre.period[2])
+  assert(length(time(data.pre.period)) >= 3,
          "pre.period must span at least 3 time points")
   assert_that(post.period[2] >= post.period[1])
   assert_that(post.period[1] > pre.period[2])
   return(list(pre.period = pre.period, post.period = post.period))
 }
 
-# ------------------------------------------------------------------------------
 FormatInputForCausalImpact <- function(data, pre.period, post.period,
                                        model.args, bsts.model,
                                        post.period.response, alpha) {
@@ -191,7 +188,6 @@ FormatInputForCausalImpact <- function(data, pre.period, post.period,
               post.period.response = post.period.response, alpha = alpha))
 }
 
-# ------------------------------------------------------------------------------
 CausalImpact <- function(data = NULL,
                          pre.period = NULL,
                          post.period = NULL,
@@ -314,7 +310,6 @@ CausalImpact <- function(data = NULL,
   return(impact)
 }
 
-# ------------------------------------------------------------------------------
 RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
   # Runs an impact analysis on top of a fitted bsts model.
   #
@@ -384,7 +379,6 @@ RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
   return(impact)
 }
 
-# ------------------------------------------------------------------------------
 RunWithBstsModel <- function(bsts.model, post.period.response, alpha = 0.05) {
   # Runs an impact analysis on top of a fitted bsts model.
   #
@@ -429,7 +423,6 @@ RunWithBstsModel <- function(bsts.model, post.period.response, alpha = 0.05) {
   return(impact)
 }
 
-# ------------------------------------------------------------------------------
 PrintSummary <- function(impact, digits = 2L) {
   # Prints a summary of the results. Both \code{print.CausalImpact()} and
   # \code{summary.CausalImpact()} point here.
@@ -513,7 +506,6 @@ PrintSummary <- function(impact, digits = 2L) {
   cat("\n")
 }
 
-# ------------------------------------------------------------------------------
 PrintReport <- function(impact) {
   # Prints a detailed report of the individual steps carried out during the
   # analysis.
@@ -531,7 +523,6 @@ PrintReport <- function(impact) {
   }
 }
 
-# ------------------------------------------------------------------------------
 .summary.CausalImpact <- function(impact,
                                   output = c("summary", "report"),
                                   ...) {
@@ -551,7 +542,6 @@ PrintReport <- function(impact) {
   }
 }
 
-# ------------------------------------------------------------------------------
 summary.CausalImpact <- function(object, ...) {
   # S3 method for printing a summary of analysis results.
   #
@@ -571,7 +561,6 @@ summary.CausalImpact <- function(object, ...) {
   .summary.CausalImpact(object, ...)
 }
 
-# ------------------------------------------------------------------------------
 print.CausalImpact <- function(x, ...) {
   # S3 method for printing a summary of analysis results.
   #
@@ -589,4 +578,27 @@ print.CausalImpact <- function(x, ...) {
   #   usage: print(x, output = c("summary", "report"), ...)
 
   .summary.CausalImpact(x, ...)
+}
+
+as.CausalImpact <- function(x, ...) {
+  # S3 method for allowing other packages to write a \code{as.CausalImpact.foo}
+  # function that coerces an object of class \code{foo} into a
+  # \code{CausalImpact} object.
+  #
+  # Args:
+  #   x:   Any \code{R} object.
+  #   ...: Additional arguments to be passed to the method.
+
+  UseMethod("as.CausalImpact")
+}
+
+as.CausalImpact.default <- function(x, ...) {
+  # Default method for \code{as.CausalImpact}.
+  #
+  # Args:
+  #   x:   Any \code{R} object.
+  #   ...: Additional arguments to be passed to the method.
+
+  stop("No method available to coerce an object of class ", class(x)[1],
+       " to CausalImpact")
 }

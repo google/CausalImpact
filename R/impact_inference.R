@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ------------------------------------------------------------------------------
 # Posterior inference for bsts models.
 #
 # Author: kbrodersen@google.com (Kay Brodersen)
 
-# ------------------------------------------------------------------------------
 GetPosteriorStateSamples <- function(bsts.model) {
   # Returns a matrix of simulated values from the marginal posterior
   # distribution for the sum of all state variables.
@@ -40,7 +38,6 @@ GetPosteriorStateSamples <- function(bsts.model) {
   return(state.samples)
 }
 
-# ------------------------------------------------------------------------------
 ComputeResponseTrajectories <- function(bsts.model) {
   # Generates trajectories of the response variable. A trajectory is a simulated
   # time series drawn from the posterior predictive distribution over the data.
@@ -70,7 +67,6 @@ ComputeResponseTrajectories <- function(bsts.model) {
   return(y.samples)
 }
 
-# ------------------------------------------------------------------------------
 ComputePointPredictions <- function(y.samples, state.samples, alpha = 0.05) {
   # Summarises a matrix of response trajectory samples (\code{y.samples}) in
   # terms of the mean and an interval of the posterior predictive density over
@@ -104,7 +100,6 @@ ComputePointPredictions <- function(y.samples, state.samples, alpha = 0.05) {
   return(point.pred)
 }
 
-# ------------------------------------------------------------------------------
 ComputeCumulativePredictions <- function(y.samples, point.pred, y,
                                          post.period.begin, alpha = 0.05) {
   # Computes summary statistics for the cumulative posterior predictions over
@@ -174,7 +169,6 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   return(cum.pred)
 }
 
-# ------------------------------------------------------------------------------
 CompileSummaryTable <- function(y.post, y.samples.post,
                                 point.pred.mean.post, alpha = 0.05) {
   # Creates a table of statistics that summarise the post-intervention period.
@@ -245,7 +239,7 @@ CompileSummaryTable <- function(y.post, y.samples.post,
   # Add interval coverage, defined by alpha
   summary$alpha <- alpha
 
-  # Add tail-area probability of overall impact, p
+  # Add one-sided tail-area probability of overall impact, p
   y.samples.post.sum <- rowSums(y.samples.post)
   y.post.sum <- sum(y.post)
   p <- min(sum(c(y.samples.post.sum, y.post.sum) >= y.post.sum),
@@ -256,7 +250,6 @@ CompileSummaryTable <- function(y.post, y.samples.post,
   return(summary)
 }
 
-# ------------------------------------------------------------------------------
 InterpretSummaryTable <- function(summary) {
   # Composes a written interpretation of a given summary table.
   #
@@ -380,9 +373,9 @@ InterpretSummaryTable <- function(summary) {
   }
   if (p < summary$alpha[1]) {
     stmt <- paste0(stmt, "\n\nThe probability of obtaining this effect by ",
-                   "chance is very small (Bayesian tail-area probability p = ",
-                   round(p, 3), "). This means the causal effect can be ",
-                   "considered statistically significant.")
+                   "chance is very small (Bayesian one-sided tail-area ",
+                   "probability p = ", round(p, 3), "). This means the causal ",
+                   "effect can be considered statistically significant.")
   } else {
     stmt <- paste0(stmt, "\n\nThe probability of obtaining this ",
                    "effect by chance is p = ", round(p, 3), ". This ",
@@ -392,7 +385,6 @@ InterpretSummaryTable <- function(summary) {
   return(stmt)
 }
 
-# ------------------------------------------------------------------------------
 AssertCumulativePredictionsAreConsistent <- function(cum.pred,
                                                      post.period.begin,
                                                      summary) {
@@ -416,7 +408,6 @@ AssertCumulativePredictionsAreConsistent <- function(cum.pred,
              summary$Pred.upper[2]) < 0.1, "bad cum.pred$upper")
 }
 
-# ------------------------------------------------------------------------------
 CheckInputForCompilePosteriorInferences <- function(bsts.model, y.post, alpha,
                                                     UnStandardize) {
   # Checks the input arguments for CompilePosteriorInferences().
@@ -441,7 +432,7 @@ CheckInputForCompilePosteriorInferences <- function(bsts.model, y.post, alpha,
   y.post <- as.vector(y.post)
   assert_that(is.numeric(y.post))
   assert_that(length(y.post) >= 1)
-  assert(!any(is.na(y.post)), "NA values in y.post not currently supported")
+  assert(!anyNA(y.post), "NA values in y.post not currently supported")
   assert(all(is.na(tail(bsts.model$original.series, length(y.post)))),
          paste0("bsts.model$original.series must end on a stretch of NA ",
                 "values at least as long as y.post"))
@@ -465,7 +456,6 @@ CheckInputForCompilePosteriorInferences <- function(bsts.model, y.post, alpha,
               UnStandardize = UnStandardize))
 }
 
-# ------------------------------------------------------------------------------
 CompilePosteriorInferences <- function(bsts.model, y.post, alpha = 0.05,
                                        UnStandardize = identity) {
   # Takes in a fitted \code{bsts} model and computes the posterior predictive
@@ -540,7 +530,6 @@ CompilePosteriorInferences <- function(bsts.model, y.post, alpha = 0.05,
               report = report))
 }
 
-# ------------------------------------------------------------------------------
 CompileNaInferences <- function(y.model) {
   # Creates a data frame of inferences that are all NA. We do this when the
   # response data were ill-conditioned (e.g., all constant).

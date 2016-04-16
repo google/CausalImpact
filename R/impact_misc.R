@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ------------------------------------------------------------------------------
 # Utility functions used throughout the package.
 #
 # Authors: kbrodersen@google.com (Kay Brodersen)
 #          gallusser@google.com (Fabian Gallusser)
 
-# ------------------------------------------------------------------------------
 repmat <- function(X, m, n) {
   # R equivalent of repmat (MATLAB). Replicates a given vector or matrix.
   #
@@ -45,7 +43,6 @@ repmat <- function(X, m, n) {
   matrix(t(matrix(X, mx, nx * n)), mx * m, nx * n, byrow = TRUE)
 }
 
-# ------------------------------------------------------------------------------
 is.wholenumber <- function(x, tol = .Machine$double.eps ^ 0.5) {
   # Checks whether a number is a whole number. This is not the same as
   # \code{is.integer()}, which tests the data type.
@@ -64,7 +61,6 @@ is.wholenumber <- function(x, tol = .Machine$double.eps ^ 0.5) {
   return(abs(x - round(x)) < tol)
 }
 
-# ------------------------------------------------------------------------------
 cumsum.na.rm <- function(x) {
   # Cumulative sum, ignoring NA.
   #
@@ -90,7 +86,6 @@ cumsum.na.rm <- function(x) {
   return(s)
 }
 
-# ------------------------------------------------------------------------------
 assert <- function(expr = TRUE, error = "") {
   # Throws a custom error message if a condition is not fulfilled. This is an
   # equally simple and useful R implementation of the corresponding MATLAB
@@ -118,7 +113,6 @@ assert <- function(expr = TRUE, error = "") {
   }
 }
 
-# ------------------------------------------------------------------------------
 TryStop <- function(call, error.msg = NULL) {
   # Tries to evaluate \code{call} and return its return value. If the call
   # fails, throws an error. The error message can be overwritten by
@@ -143,7 +137,6 @@ TryStop <- function(call, error.msg = NULL) {
   }
 }
 
-# ------------------------------------------------------------------------------
 TryError <- function(call) {
   # Tries to execute <call> and return its return value. If the call fails,
   # returns an error object containing the errror message (but doesn't throw
@@ -158,7 +151,6 @@ TryError <- function(call) {
   return(tryCatch(eval(call), error = function(e) e))
 }
 
-# ------------------------------------------------------------------------------
 ParseArguments <- function(args, defaults, allow.extra.args = FALSE) {
   # Fills missing fields in \code{args} with \code{defaults}. This function is
   # similar to what \code{modifyList()} does; except it is not nested, it allows
@@ -210,7 +202,6 @@ ParseArguments <- function(args, defaults, allow.extra.args = FALSE) {
   return(args)
 }
 
-# ------------------------------------------------------------------------------
 Standardize <- function(y) {
   # Standardizes a vector \code{y} (to obtain mean 0 and SD 1). The original
   # vector can be restored using \code{UnStandardize()}, which is a function
@@ -250,7 +241,6 @@ Standardize <- function(y) {
   return(list(y = y, UnStandardize = UnStandardize))
 }
 
-# ------------------------------------------------------------------------------
 StandardizeAllVariables <- function(data) {
   # Standardizes all columns of a given time series.
   #
@@ -277,7 +267,6 @@ StandardizeAllVariables <- function(data) {
   return(list(data = data, UnStandardize = UnStandardize))
 }
 
-# ------------------------------------------------------------------------------
 InferPeriodIndicesFromData <- function(y) {
   # Takes in a vector of observations and guesses the beginning and end of the
   # pre-period and the post-period.
@@ -313,7 +302,6 @@ InferPeriodIndicesFromData <- function(y) {
   return(list(pre.period = pre.period, post.period = post.period))
 }
 
-# ------------------------------------------------------------------------------
 PrettifyPercentage <- function(x, round.digits = 0) {
   # Converts a number into a nicely formatted percentage.
   #
@@ -333,7 +321,6 @@ PrettifyPercentage <- function(x, round.digits = 0) {
   return(paste(sign, value, "%", sep = ""))
 }
 
-# ------------------------------------------------------------------------------
 PrettifyNumber <- function(x, letter = "", round.digits = 1) {
   # Converts a number into heavily rounded human-readible format.
   #
@@ -370,7 +357,6 @@ PrettifyNumber <- function(x, letter = "", round.digits = 1) {
   return(output)
 }
 
-# ------------------------------------------------------------------------------
 IdentifyNumberAbbreviation <- function(abbreviated.number) {
   # Identifies the rounding thousand used in PrettifyNumber(). It is useful when
   # multiple numbers to be rounded at the same level.

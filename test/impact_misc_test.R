@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ------------------------------------------------------------------------------
 # Unit tests for impact_misc.R.
 #
 # Authors: kbrodersen@google.com (Kay Brodersen)
 #          gallusser@google.com (Fabian Gallusser)
 
-# ------------------------------------------------------------------------------
 CreateDummySeries <- function() {
   # Creates a dummy series for testing: 3 years of data, single variable.
   #
@@ -33,7 +31,6 @@ CreateDummySeries <- function() {
   return(data)
 }
 
-# ------------------------------------------------------------------------------
 TestRepmat <- function() {
   repmat <- CausalImpact:::repmat
 
@@ -55,7 +52,6 @@ TestRepmat <- function() {
   checkEquals(repmat(c(10, 20), 1, 2), as.matrix(t(c(10, 20, 10, 20))))
 }
 
-# ------------------------------------------------------------------------------
 TestIsWholeNumber <- function() {
   is.wholenumber <- CausalImpact:::is.wholenumber
 
@@ -72,7 +68,6 @@ TestIsWholeNumber <- function() {
   checkEquals(is.wholenumber(c(1, 1.0, 1.2)), c(TRUE, TRUE, FALSE))
 }
 
-# ------------------------------------------------------------------------------
 TestCumsumNaRm <- function() {
   cumsum.na.rm <- CausalImpact:::cumsum.na.rm
 
@@ -92,7 +87,6 @@ TestCumsumNaRm <- function() {
   checkEquals(cumsum.na.rm(c(0, NA, NA, 0)), c(0, NA, NA, 0))
 }
 
-# ------------------------------------------------------------------------------
 TestAssert <- function() {
   assert <- CausalImpact:::assert
   TryError <- CausalImpact:::TryError
@@ -104,7 +98,6 @@ TestAssert <- function() {
   checkTrue(TryError(assert(FALSE, 'foo'))$message == "foo")
 }
 
-# ------------------------------------------------------------------------------
 TestParseArguments <- function() {
   ParseArguments <- CausalImpact:::ParseArguments
 
@@ -135,7 +128,6 @@ TestParseArguments <- function() {
                                 allow.extra.args = FALSE))
 }
 
-# ------------------------------------------------------------------------------
 TestStandardize <- function() {
   Standardize <- CausalImpact:::Standardize
 
@@ -164,7 +156,6 @@ TestStandardize <- function() {
   checkException(Standardize(matrix(rnorm(10), ncol = 2)))
 }
 
-# ------------------------------------------------------------------------------
 TestStandardizeAllVariables <- function() {
   StandardizeAllVariables <- CausalImpact:::StandardizeAllVariables
   Standardize <- CausalImpact:::Standardize
@@ -197,7 +188,6 @@ TestStandardizeAllVariables <- function() {
   checkEquals(result$UnStandardize, Standardize(data)$UnStandardize)
 }
 
-# ------------------------------------------------------------------------------
 TestInferPeriodIndicesFromData <- function() {
   InferPeriodIndicesFromData <- CausalImpact:::InferPeriodIndicesFromData
 
@@ -220,7 +210,6 @@ TestInferPeriodIndicesFromData <- function() {
   checkException(InferPeriodIndicesFromData(c(NA, NA, 1, 2, 3)))
 }
 
-# ------------------------------------------------------------------------------
 TestPrettifyPercentage <- function() {
   PrettifyPercentage <- CausalImpact:::PrettifyPercentage
 
@@ -233,7 +222,6 @@ TestPrettifyPercentage <- function() {
   checkEquals(PrettifyPercentage(c(-0.125, 0.2), 2), c("-12.5%", "+20%"))
 }
 
-# ------------------------------------------------------------------------------
 TestPrettifyNumber <- function() {
   PrettifyNumber <- CausalImpact:::PrettifyNumber
 
@@ -248,7 +236,6 @@ TestPrettifyNumber <- function() {
   checkEquals(PrettifyNumber(123456), "123.5K")
 }
 
-# ------------------------------------------------------------------------------
 TestIdentifyNumberAbbreviation <- function() {
   IdentifyNumberAbbreviation <- CausalImpact:::IdentifyNumberAbbreviation
 

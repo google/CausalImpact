@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ------------------------------------------------------------------------------
 # Unit tests for impact_model_ss.R.
 #
 # Author: kbrodersen@google.com (Kay Brodersen)
 
-# ------------------------------------------------------------------------------
 TestObservationsAreIllConditioned <- function() {
   ObservationsAreIllConditioned <- CausalImpact:::ObservationsAreIllConditioned
 
@@ -42,7 +40,6 @@ TestObservationsAreIllConditioned <- function() {
   checkTrue(ObservationsAreIllConditioned(c(NA, 1, 2, NA, NA)))
 }
 
-# ------------------------------------------------------------------------------
 TestFormatInputForConstructModel <- function() {
   FormatInputForConstructModel <- CausalImpact:::FormatInputForConstructModel
 
@@ -116,7 +113,6 @@ TestFormatInputForConstructModel <- function() {
                                                      dynamic.regression))) })
 }
 
-# ------------------------------------------------------------------------------
 TestConstructModel <- function() {
   ConstructModel <- CausalImpact:::ConstructModel
 
