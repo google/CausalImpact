@@ -129,7 +129,8 @@ plot(impact)
 ```
 ```{r, echo=FALSE}
 impact <- CausalImpact(data, pre.period, post.period)
-plot(impact) + theme_bw(base_size = 11)
+q <- plot(impact) + theme_bw(base_size = 11)
+suppressWarnings(plot(q))
 ```
 
 ## 6. Printing a summary table
