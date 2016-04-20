@@ -96,7 +96,8 @@ plot(impact)
 library(ggplot2)
 ```
 ```{r, echo=FALSE}
-plot(impact) + theme_bw(base_size = 11)
+q <- plot(impact) + theme_bw(base_size = 11)
+suppressWarnings(plot(q))
 ```
 
 By default, the plot contains three panels. The first panel shows the data and a counterfactual prediction for the post-treatment period. The second panel shows the difference between observed data and counterfactual predictions. This is the *pointwise* causal effect, as estimated by the model. The third panel adds up the pointwise contributions from the second panel, resulting in a plot of the *cumulative* effect of the intervention.
@@ -278,4 +279,4 @@ An R package for causal inference using Bayesian structural time-series models
 Version `r packageVersion("CausalImpact")`\
 Licensed under the Apache License, Version 2.0.\
 Author: Kay H. Brodersen\
-Copyright © 2014-2015 Google, Inc.
+Copyright © 2014-2016 Google, Inc.
