@@ -102,8 +102,7 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
 
   # Select metrics to display (and their order)
   assert_that(is.vector(metrics))
-  metrics <- sapply(metrics, function(m) match.arg(m, c("original", "pointwise",
-                                                        "cumulative")))
+  metrics <- match.arg(metrics, several.ok = TRUE)
   data <- data[data$metric %in% metrics, ]
   data$metric <- factor(data$metric, metrics)
 

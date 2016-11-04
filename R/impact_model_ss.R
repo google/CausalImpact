@@ -104,7 +104,7 @@ FormatInputForConstructModel <- function(data, model.args) {
 
   # Check those parts of <model.args> that are used in this file
   # Check <niter>
-  assert_that(length(model.args$niter) == 1)
+  assert_that(is.scalar(model.args$niter))
   assert_that(is.numeric(model.args$niter))
   assert_that(!is.na(model.args$niter))
   assert_that(is.wholenumber(model.args$niter))
@@ -116,13 +116,13 @@ FormatInputForConstructModel <- function(data, model.args) {
   }
 
   # Check <prior.level.sd>
+  assert_that(is.scalar(model.args$prior.level.sd))
   assert_that(is.numeric(model.args$prior.level.sd))
   assert_that(!is.na(model.args$prior.level.sd))
-  assert_that(length(model.args$prior.level.sd) == 1)
   assert_that(model.args$prior.level.sd > 0)
 
   # Check <nseasons>
-  assert_that(length(model.args$nseasons) == 1)
+  assert_that(is.scalar(model.args$nseasons))
   assert_that(is.numeric(model.args$nseasons))
   assert_that(!is.na(model.args$nseasons))
   assert_that(is.wholenumber(model.args$nseasons))
@@ -130,16 +130,16 @@ FormatInputForConstructModel <- function(data, model.args) {
          "nseasons cannot be 0; use 1 in order not to have seaonsal components")
 
   # Check <season.duration>
-  assert_that(length(model.args$season.duration) == 1)
+  assert_that(is.scalar(model.args$season.duration))
   assert_that(is.numeric(model.args$season.duration))
   assert_that(!is.na(model.args$season.duration))
   assert_that(is.wholenumber(model.args$season.duration))
   assert_that(model.args$season.duration >= 1)
 
   # Check <dynamic.regression>
+  assert_that(is.scalar(model.args$dynamic.regression))
   assert_that(is.logical(model.args$dynamic.regression))
   assert_that(!is.na(model.args$dynamic.regression))
-  assert_that(length(model.args$dynamic.regression) == 1)
 
   # Return updated args
   return(list(data = data, model.args = model.args))

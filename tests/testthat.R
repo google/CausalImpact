@@ -17,14 +17,9 @@
 # Author: kbrodersen@google.com (Kay Brodersen)
 
 library(CausalImpact)
-library(RUnit)
-
-# Hide error messages caused by checkException()
-runit.options <- getOption("RUnit")
-runit.options$silent <- TRUE
-options("RUnit" = runit.options)
+library(testthat)
 
 # Open graphics device and run tests
 png("/tmp/tmp.png")
-RunUnitTests()
+testthat::test_check("CausalImpact")
 dev.off()

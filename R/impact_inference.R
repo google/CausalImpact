@@ -29,7 +29,7 @@ GetPosteriorStateSamples <- function(bsts.model) {
   # Get state contributions (e.g., 1000 samples x 2 states x 365 time pts),
   # discarding burn-in samples (=> 900 x 2 x 365)
   burn <- SuggestBurn(0.1, bsts.model)
-  assert(burn > 0)
+  assert_that(burn > 0)
   state.contributions <- bsts.model$state.contributions[-(1 : burn), , ,
                                                         drop = FALSE]
 
@@ -56,7 +56,7 @@ ComputeResponseTrajectories <- function(bsts.model) {
 
   # Get observation noise standard deviation samples
   burn <- SuggestBurn(0.1, bsts.model)
-  assert(burn > 0)
+  assert_that(burn > 0)
   sigma.obs <- bsts.model$sigma.obs[-(1 : burn)]  # e.g., 900
 
   # Sample from the posterior predictive density over data
@@ -85,12 +85,12 @@ ComputePointPredictions <- function(y.samples, state.samples, alpha = 0.05) {
   #     point.pred.upper: upper limit
 
   # Expectation of data = expectation of state (because noise is centered)
-  assert(isTRUE(all.equal(dim(y.samples), dim(state.samples))),
+  assert(identical(dim(y.samples), dim(state.samples)),
          "inconsistent y.samples, state.samples")
   point.pred.mean <- colMeans(state.samples) # e.g., 365
 
   # Quantiles of the data = Quantiles of (state + observation noise)
-  assert((length(alpha) == 1) && (alpha > 0) && (alpha < 1), "invalid alpha")
+  assert_that(is.scalar(alpha), alpha > 0, alpha < 1)
   prob.lower <- alpha / 2      # e.g., 0.025 when alpha = 0.05
   prob.upper <- 1 - alpha / 2  # e.g., 0.975 when alpha = 0.05
   point.pred.lower <- as.numeric(t(apply(y.samples, 2, quantile, prob.lower)))
@@ -110,7 +110,8 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   #                      by \code{ComputeResponseTrajectories()}.
   #   point.pred:        Data frame of point predictions, as returned by
   #                      \code{ComputePointPredictions()}.
-  #   y:                 Actual observed response (pre- and post-period).
+  #   y:                 Actual observed response, from the beginning of the
+  #                      pre-period to the end of the observed period.
   #   post.period.begin: Index of the first data point of the post-period.
   #   alpha:             The resulting coverage of the posterior intervals will
   #                      be \code{1 - alpha}.
@@ -124,13 +125,14 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   # After pre-inference standardization of the response variable has been
   # undone, we can form cumulative time series of counterfactual predictions.
   # Note that we only explicitly compute these for the post-period. The
-  # cumulative prediction for the pre-period is forced to equal the (cumulative)
-  # observed response in the pre-period. Thus, the posterior intervals of the
-  # cumulative predictions do not inherit variance from the pre-period, which
-  # would be misleading when subtracting cumulative predictions from the
-  # cumulative observed response to obtain the cumulative impact, which is the
-  # main use case. Thus, the the cumulative impact will be zero by construction
-  # before the beginning of the forecast period.
+  # cumulative prediction for the pre-period and the gap between pre- and post-
+  # period (if any) is forced to equal the (cumulative) observed response in the
+  # pre-period. Thus, the posterior intervals of the cumulative predictions do
+  # not inherit variance from the pre-period, which would be misleading when
+  # subtracting cumulative predictions from the cumulative observed response to
+  # obtain the cumulative impact, which is the main use case. Thus, the
+  # cumulative impact will be zero by construction before the beginning of the
+  # post-period.
 
   # Compute posterior mean
   is.post.period <- (1 : length(y)) >= post.period.begin
@@ -139,9 +141,9 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
       cum.pred.mean.pre[post.period.begin - 1]
   cum.pred.mean <- c(cum.pred.mean.pre, cum.pred.mean.post)
 
-  # Check for overflow (b/11313017)
+  # Check for overflow
   assert(length(setdiff(which(is.na(cum.pred.mean)),
-                        which(is.na(y[1 : (post.period.begin - 1)])))) == 0,
+                        which(is.na(y[1:(post.period.begin - 1)])))) == 0,
          "unexpected NA found in cum.pred.mean")
 
   # Compute posterior interval
@@ -153,7 +155,7 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   if (sum(is.post.period) == 1) {
     y.samples.cum.post <- t(y.samples.cum.post)
   }
-  assert((length(alpha) == 1) && (alpha > 0) && (alpha < 1), "invalid alpha")
+  assert_that(is.scalar(alpha), alpha > 0, alpha < 1)
   prob.lower <- alpha / 2      # e.g., 0.025 when alpha = 0.05
   prob.upper <- 1 - alpha / 2  # e.g., 0.975 when alpha = 0.05
   cum.pred.lower.post <- as.numeric(t(apply(y.samples.cum.post, 2, quantile,
@@ -201,10 +203,10 @@ CompileSummaryTable <- function(y.post, y.samples.post,
   # with a matrix of replicated observations (e.g., 900 x 201)
   n.samples <- nrow(y.samples.post)
   y.repmat.post <- repmat(y.post, n.samples, 1)
-  assert(all(dim(y.repmat.post) == dim(y.samples.post)))
+  assert_that(all(dim(y.repmat.post) == dim(y.samples.post)))
 
   # Define quantiles
-  assert((length(alpha) == 1) && (alpha > 0) && (alpha < 1), "invalid alpha")
+  assert_that(is.scalar(alpha), alpha > 0, alpha < 1)
   prob.lower <- alpha / 2      # e.g., 0.025 when alpha = 0.05
   prob.upper <- 1 - alpha / 2  # e.g., 0.975 when alpha = 0.05
 
@@ -245,31 +247,33 @@ CompileSummaryTable <- function(y.post, y.samples.post,
   p <- min(sum(c(y.samples.post.sum, y.post.sum) >= y.post.sum),
            sum(c(y.samples.post.sum, y.post.sum) <= y.post.sum)) /
       (length(y.samples.post.sum) + 1)
-  assert(p > 0 && p < 1)
+  assert_that(p > 0, p < 1)
   summary$p <- p
   return(summary)
 }
 
-InterpretSummaryTable <- function(summary) {
+InterpretSummaryTable <- function(summary, digits = 2L) {
   # Composes a written interpretation of a given summary table.
   #
   # Args:
   #   summary: Data frame with summary statistics, as created within
   #            FitImpactModel().
+  #   digits:  Number of digits to print for all numbers. Note that percentages
+  #            are always rounded to whole numbers.
   #
   # Returns:
   #   A string summarizing the summary verbally as one would do in the Results
   #   section of a paper.
 
   # Prepare formatted numbers
-  actual <- PrettifyNumber(summary$Actual, round.digits = 2)
+  actual <- PrettifyNumber(summary$Actual, round.digits = digits)
   letter <- IdentifyNumberAbbreviation(actual)
   pred <- PrettifyNumber(summary$Pred, letter, 2)
-  pred.lower <- PrettifyNumber(summary$Pred.lower, letter, 2)
-  pred.upper <- PrettifyNumber(summary$Pred.upper, letter, 2)
-  abs.effect <- PrettifyNumber(summary$AbsEffect, letter, 2)
-  abs.effect.lower <- PrettifyNumber(summary$AbsEffect.lower, letter, 2)
-  abs.effect.upper <- PrettifyNumber(summary$AbsEffect.upper, letter, 2)
+  pred.lower <- PrettifyNumber(summary$Pred.lower, letter, digits)
+  pred.upper <- PrettifyNumber(summary$Pred.upper, letter, digits)
+  abs.effect <- PrettifyNumber(summary$AbsEffect, letter, digits)
+  abs.effect.lower <- PrettifyNumber(summary$AbsEffect.lower, letter, digits)
+  abs.effect.upper <- PrettifyNumber(summary$AbsEffect.upper, letter, digits)
   rel.effect <- PrettifyPercentage(summary$RelEffect)
   rel.effect.lower <- PrettifyPercentage(summary$RelEffect.lower)
   rel.effect.upper <- PrettifyPercentage(summary$RelEffect.upper)
@@ -385,37 +389,39 @@ InterpretSummaryTable <- function(summary) {
   return(stmt)
 }
 
-AssertCumulativePredictionsAreConsistent <- function(cum.pred,
-                                                     post.period.begin,
+AssertCumulativePredictionsAreConsistent <- function(cum.pred, post.period,
                                                      summary) {
   # Asserts that <cum.pred> is consistent with <summary>.
   #
   # Args:
   #   cum.pred:          Data frame of: cum.pred, cum.pred.lower, cum.upper.
-  #   post.period.begin: Index of first data point of post period.
+  #   post.period:       A vector of two indices specifying the first and the
+  #                      last time point of the post-intervention period.
   #   summary:           Summary table, as created by
   #                      \code{CompileSummaryTable()}.
 
-  n <- length(cum.pred$cum.pred)
-  assert(abs(cum.pred$cum.pred[n] -
-             cum.pred$cum.pred[post.period.begin - 1] -
+  assert(abs(cum.pred$cum.pred[post.period[2]] -
+             cum.pred$cum.pred[post.period[1] - 1] -
              summary$Pred[2]) < 0.1, "bad cum.pred$cum.pred (mean)")
-  assert(abs(cum.pred$cum.pred.lower[n] -
-             cum.pred$cum.pred.lower[post.period.begin - 1] -
+  assert(abs(cum.pred$cum.pred.lower[post.period[2]] -
+             cum.pred$cum.pred.lower[post.period[1] - 1] -
              summary$Pred.lower[2]) < 0.1, "bad cum.pred$lower")
-  assert(abs(cum.pred$cum.pred.upper[n] -
-             cum.pred$cum.pred.upper[post.period.begin - 1] -
+  assert(abs(cum.pred$cum.pred.upper[post.period[2]] -
+             cum.pred$cum.pred.upper[post.period[1] - 1] -
              summary$Pred.upper[2]) < 0.1, "bad cum.pred$upper")
 }
 
-CheckInputForCompilePosteriorInferences <- function(bsts.model, y.post, alpha,
+CheckInputForCompilePosteriorInferences <- function(bsts.model, y.cf,
+                                                    post.period, alpha,
                                                     UnStandardize) {
   # Checks the input arguments for CompilePosteriorInferences().
   #
   # Args:
   #   bsts.model:    Model object created by bsts().
-  #   y.post:        Actual observed data in post-intervention period (vector or
-  #                  zoo object)
+  #   y.cf:          Actual observed data in the counterfactual period, i.e.
+  #                  after pre-intervention period (vector or zoo object).
+  #   post.period:   A vector of two indices specifying the first and the last
+  #                  time point of the post-intervention period.
   #   alpha:         Level for credible intervals.
   #   UnStandardize: Function for undoing any data standardization.
   #
@@ -427,19 +433,30 @@ CheckInputForCompilePosteriorInferences <- function(bsts.model, y.post, alpha,
   assert_that(class(bsts.model) == "bsts")
   assert_that(length(bsts.model$original.series) >= 2)
 
-  # Check <y.post>
-  assert_that(is.zoo(y.post) || is.vector(y.post))
-  y.post <- as.vector(y.post)
-  assert_that(is.numeric(y.post))
-  assert_that(length(y.post) >= 1)
-  assert(!anyNA(y.post), "NA values in y.post not currently supported")
-  assert(all(is.na(tail(bsts.model$original.series, length(y.post)))),
+  # Check <y.cf>
+  assert_that(is.zoo(y.cf) || is.vector(y.cf))
+  y.cf <- as.vector(y.cf)
+  assert_that(is.numeric(y.cf))
+  assert_that(length(y.cf) >= 1)
+  assert(!anyNA(y.cf), "NA values in y.cf not currently supported")
+  assert(all(is.na(tail(bsts.model$original.series, length(y.cf)))),
          paste0("bsts.model$original.series must end on a stretch of NA ",
-                "values at least as long as y.post"))
+                "at least as long as y.cf"))
+
+  # Check <post.period>
+  assert_that(is.vector(post.period))
+  assert_that(is.numeric(post.period))
+  assert_that(length(post.period) == 2)
+  assert_that(!anyNA(post.period))
+  # Check that <post.period> lies within the range covered by <y.cf>
+  cf.period.start <- length(bsts.model$original.series) - length(y.cf) + 1
+  assert_that(cf.period.start <= post.period[1])
+  assert_that(post.period[1] <= post.period[2])
+  assert_that(post.period[2] <= length(bsts.model$original.series))
 
   # Check <alpha>
   assert_that(is.numeric(alpha))
-  assert_that(length(alpha) == 1)
+  assert_that(is.scalar(alpha))
   assert_that(!is.na(alpha))
   assert_that(alpha > 0, alpha < 1)
 
@@ -451,21 +468,24 @@ CheckInputForCompilePosteriorInferences <- function(bsts.model, y.post, alpha,
 
   # Return arguments
   return(list(bsts.model = bsts.model,
-              y.post = y.post,
+              y.cf = y.cf,
+              post.period = post.period,
               alpha = alpha,
               UnStandardize = UnStandardize))
 }
 
-CompilePosteriorInferences <- function(bsts.model, y.post, alpha = 0.05,
-                                       UnStandardize = identity) {
+CompilePosteriorInferences <- function(bsts.model, y.cf, post.period,
+                                       alpha = 0.05, UnStandardize = identity) {
   # Takes in a fitted \code{bsts} model and computes the posterior predictive
   # distributions, over time, for the counterfactual response and the causal
   # effect.
   #
   # Args:
   #   bsts.model:    A model object created by \code{bsts()}.
-  #   y.post:        Actual observed data in post-intervention period (vector or
-  #                  zoo object).
+  #   y.cf:          Actual observed data in the counterfactual period, i.e.
+  #                  after pre-intervention period (vector or zoo object).
+  #   post.period:   A vector of two indices specifying the first and the last
+  #                  time point of the post-intervention period.
   #   alpha:         The resulting coverage of the posterior intervals will be
   #                  \code{1 - alpha}.
   #   UnStandardize: If \code{bsts()} was run on standardized data, this is the
@@ -478,10 +498,12 @@ CompilePosteriorInferences <- function(bsts.model, y.post, alpha = 0.05,
   #   report:  verbal description of the summary statistics
 
   # Check input
-  checked <- CheckInputForCompilePosteriorInferences(bsts.model, y.post,
-                                                     alpha, UnStandardize)
+  checked <- CheckInputForCompilePosteriorInferences(bsts.model, y.cf,
+                                                     post.period, alpha,
+                                                     UnStandardize)
   bsts.model <- checked$bsts.model
-  y.post <- checked$y.post
+  y.cf <- checked$y.cf
+  post.period <- checked$post.period
   alpha <- checked$alpha
   UnStandardize <- checked$UnStandardize
 
@@ -493,36 +515,49 @@ CompilePosteriorInferences <- function(bsts.model, y.post, alpha = 0.05,
   # Undo standardization (if any)
   y.samples <- UnStandardize(y.samples)
   point.pred <- UnStandardize(point.pred)
-  y <- UnStandardize(bsts.model$original.series)
+  y.model <- UnStandardize(bsts.model$original.series)
 
-  # Compile summary statistics (in original space)
-  post.period.begin <- ncol(y.samples) - length(y.post) + 1
-  is.post.period <- (1 : ncol(y.samples)) >= post.period.begin
+  # Reconstruct full original series
+  indices <- seq_along(y.model)
+  is.cf.period <- (indices >= length(y.model) - length(y.cf) + 1)
+  y.model[is.cf.period] <- y.cf
+
+  # Compile summary statistics (in original space). Summary statistics consider
+  # quantities in the post-period only, not in the whole counterfactual period.
+  is.post.period <- (indices >= post.period[1]) & (indices <= post.period[2])
   y.samples.post <- y.samples[, is.post.period, drop = FALSE]
   point.pred.mean.post <- point.pred$point.pred[is.post.period]
+  y.post <- y.cf[tail(is.post.period, length(y.cf))]
   summary <- CompileSummaryTable(y.post, y.samples.post, point.pred.mean.post,
                                  alpha)
   report <- InterpretSummaryTable(summary)
 
   # Compute cumulative predictions (in original space)
-  cum.pred <- ComputeCumulativePredictions(y.samples, point.pred, y,
-                                           post.period.begin, alpha)
+  cum.pred <- ComputeCumulativePredictions(y.samples, point.pred, y.model,
+                                           post.period[1], alpha)
 
   # Check that <cum.pred> is consistent with <summary>
-  AssertCumulativePredictionsAreConsistent(cum.pred, post.period.begin, summary)
+  AssertCumulativePredictionsAreConsistent(cum.pred, post.period, summary)
 
   # Create results series
-  y.model <- y
-  y.model[is.post.period] <- y.post
   cum.y.model <- cumsum.na.rm(y.model)
-  series <- zoo(data.frame(y.model, cum.y.model, point.pred, cum.pred), time(y))
+  series <- zoo(data.frame(y.model, cum.y.model, point.pred, cum.pred),
+                time(y.model))
   series$point.effect <- series$y.model - series$point.pred
   series$point.effect.lower <- series$y.model - series$point.pred.upper
   series$point.effect.upper <- series$y.model - series$point.pred.lower
   series$cum.effect <- series$cum.y.model - series$cum.pred
   series$cum.effect.lower <- series$cum.y.model - series$cum.pred.upper
   series$cum.effect.upper <- series$cum.y.model - series$cum.pred.lower
-  assert(nrow(series) == length(bsts.model$original.series))
+  assert_that(nrow(series) == length(bsts.model$original.series))
+
+  # Set effects and cumulative effects to NA at time points not belonging to
+  # pre- or post-period.
+  # Note that since the time series is cut to the beginning of the pre-period
+  # before being given to CompilePosteriorInferences, pre-period and
+  # non-counterfactual period are identical here.
+  effect.cols <- grep("(point|cum)\\.effect", names(series))
+  series[is.cf.period & !is.post.period, effect.cols] <- NA
 
   # Return <series> and <summary>
   return(list(series = series,

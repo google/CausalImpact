@@ -108,7 +108,11 @@
     expectation of the overall effect, the corresponding
     posterior credible interval, and the posterior
     probability that the intervention had any effect,
-    expressed in terms of a p-value.
+    expressed in terms of a one-sided p-value. Note that
+    checking whether the posterior interval includes zero
+    corresponds to a two-sided hypothesis test. In contrast,
+    checking whether the p-value is below \code{alpha}
+    corresponds to a one-sided hypothesis test.
     \item \code{report}. A suggested verbal
     interpretation of the results.
     \item \code{model}. Additional analysis details,

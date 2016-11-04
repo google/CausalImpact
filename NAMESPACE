@@ -1,9 +1,13 @@
 export(CausalImpact)
+export(as.CausalImpact)
 
 S3method(summary, CausalImpact)
 S3method(print, CausalImpact)
 S3method(plot, CausalImpact)
+S3method(as.CausalImpact, default)
 
+importFrom("utils", "tail")
+import(stats)
 import(assertthat)
 import(bsts)
 import(dplyr)

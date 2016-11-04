@@ -160,7 +160,7 @@ FormatInputForCausalImpact <- function(data, pre.period, post.period,
   # fields will be checked in FormatInputForConstructModel().
   #
   # Check <standardize.data>
-  assert_that(length(model.args$standardize.data) == 1)
+  assert_that(is.scalar(model.args$standardize.data))
   assert_that(is.logical(model.args$standardize.data))
   assert_that(!is.na(model.args$standardize.data))
 
@@ -178,7 +178,7 @@ FormatInputForCausalImpact <- function(data, pre.period, post.period,
 
   # Check <alpha>
   assert_that(is.numeric(alpha))
-  assert_that(length(alpha) == 1)
+  assert_that(is.scalar(alpha))
   assert_that(!is.na(alpha))
   assert_that(alpha > 0, alpha < 1)
 
@@ -200,7 +200,8 @@ CausalImpact <- function(data = NULL,
   #
   # Detailed and up-to-date documentation is provided in
   # ../man/CausalImpact.Rd. Type ?CausalImpact to display the documentation.
-  # For example code, see the package vignette (go/causalimpact-vignette).
+  # For example code, see the package vignette
+  # (http://google.github.io/CausalImpact/).
   #
   # Args:
   #   data:        Time series of response variable and any covariates. This can
@@ -310,6 +311,39 @@ CausalImpact <- function(data = NULL,
   return(impact)
 }
 
+# TODO(alhauser): move this function to impact_misc.R for consistency.
+GetPeriodIndices <- function(period, times) {
+  # Computes indices belonging to a period in data.
+  #
+  # Args:
+  #   period:  two-element vector specifying start and end of a period, having
+  #            the same data type as <times>. The range from period[1] to
+  #            period[2] must have an intersect with <times>.
+  #   times:   vector of time points; can be of integer or of POSIXct type.
+  #
+  # Returns:
+  #   A two-element vector with the indices of the period start and end within
+  #   <times>.
+
+  # Check input
+  assert_that(length(period) == 2)
+  assert_that(!anyNA(times))
+  assert_that(identical(class(period), class(times)))
+  # Check if period boundaries are in the right order, and if <period> has an
+  # overlap with <times>
+  assert_that(period[1] <= period[2])
+  assert_that(period[1] <= tail(times, 1), period[2] >= times[1])
+
+  # Look up values of start and end of period in <times>; also works if the
+  # period start and end time are not exactly present in the time series.
+  indices <- seq_along(times)
+  is.period <- (period[1] <= times) & (times <= period[2])
+  # Make sure the period does match any time points
+  assert(any(is.period), "The period must cover at least one data point")
+  period.indices <- range(indices[is.period])
+  return(period.indices)
+}
+
 RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
   # Runs an impact analysis on top of a fitted bsts model.
   #
@@ -325,7 +359,7 @@ RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
 
   # Zoom in on data in modeling range
   pre.period[1] <- max(pre.period[1], which(!is.na(data[, 1]))[1])
-  data.modeling <- window(data, start = pre.period[1], end = post.period[2])
+  data.modeling <- window(data, start = pre.period[1])
   if (is.null(ncol(data.modeling))) {
     dim(data.modeling) <- c(length(data.modeling), 1)
   }
@@ -338,16 +372,18 @@ RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
     UnStandardize <- sd.results$UnStandardize
   }
 
-  # Set observed response in post-period to NA
-  window(data.modeling[, 1], start = post.period[1]) <- NA
+  # Set observed response after pre-period to NA
+  data.modeling[time(data.modeling) > pre.period[2], 1] <- NA
 
   # Construct model and perform inference
   bsts.model <- ConstructModel(data.modeling, model.args)
 
   # Compile posterior inferences
   if (!is.null(bsts.model)) {
-    y.post <- window(data[, 1], start = post.period[1], end = post.period[2])
-    inferences <- CompilePosteriorInferences(bsts.model, y.post, alpha,
+    y.cf <- data[time(data) > pre.period[2], 1]
+    post.period.indices <- GetPeriodIndices(post.period, time(data.modeling))
+    inferences <- CompilePosteriorInferences(bsts.model, y.cf,
+                                             post.period.indices, alpha,
                                              UnStandardize)
   } else {
     inferences <- CompileNaInferences(data[, 1])
@@ -401,7 +437,8 @@ RunWithBstsModel <- function(bsts.model, post.period.response, alpha = 0.05) {
 
   # Compile posterior inferences
   inferences <- CompilePosteriorInferences(bsts.model = bsts.model,
-                                           y.post = post.period.response,
+                                           y.cf = post.period.response,
+                                           post.period = indices$post.period,
                                            alpha = alpha)
 
   # Assign response-variable names
@@ -506,20 +543,23 @@ PrintSummary <- function(impact, digits = 2L) {
   cat("\n")
 }
 
-PrintReport <- function(impact) {
+PrintReport <- function(impact, digits = 2L) {
   # Prints a detailed report of the individual steps carried out during the
   # analysis.
   #
   # Args:
   #   impact: A \code{CausalImpact} results object, as returned by
   #           \code{CausalImpact()}.
+  #   digits: Number of digits to print for all numbers. Note that percentages
+  #           are always rounded to whole numbers.
 
   assert_that(class(impact) == "CausalImpact")
   cat("Analysis report {CausalImpact}\n")
   if (is.null(impact$report)) {
     cat("(Report empty)")
   } else {
-    cat(paste(impact$report, collapse = " "), "\n")
+    cat(paste(InterpretSummaryTable(impact$summary, digits), collapse = " "),
+        "\n")
   }
 }
 
@@ -538,7 +578,7 @@ PrintReport <- function(impact) {
   if (output == "summary") {
     PrintSummary(impact, ...)
   } else if (output == "report") {
-    PrintReport(impact)
+    PrintReport(impact, ...)
   }
 }
 
@@ -552,8 +592,8 @@ summary.CausalImpact <- function(object, ...) {
   #           \code{output}. You can specify the type of desired output using
   #           \code{summary(x, "summary")} (default) or \code{summary(x,
   #           "report")}. Partial matches are allowed. Furthermore,
-  #           \code{digits} can be used to customize the precision of the output
-  #           generated by summary(impact, "summary").
+  #           \code{digits} can be used to customize the precision of the
+  #           output.
   #
   # Documentation:
   #   usage: summary(x, output = c("summary", "report"), ...)

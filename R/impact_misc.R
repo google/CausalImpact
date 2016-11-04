@@ -93,6 +93,10 @@ assert <- function(expr = TRUE, error = "") {
   # semantics than the assert-during-debug-but-silence-in-production idea
   # implemented in other languages.
   #
+  # This function is similar to `assertthat::assert_that()`. The main difference
+  # is that `assert()` allows for a custom error message, while the current CRAN
+  # version of the `assertthat` package (0.1) does not.
+  #
   # Args:
   #   expr:  expression that evaluates to a logical
   #   error: error message if expression evaluates to \code{FALSE}
@@ -135,20 +139,6 @@ TryStop <- function(call, error.msg = NULL) {
   } else {
     return(tryCatch(eval(call), error = function(e) stop(error.msg)))
   }
-}
-
-TryError <- function(call) {
-  # Tries to execute <call> and return its return value. If the call fails,
-  # returns an error object containing the errror message (but doesn't throw
-  # an error and thus doesn't stop execution).
-  #
-  # Args:
-  #   call: any statement, e.g., a variable, a function call, etc.
-  #
-  # Returns:
-  #   The return value of \code{call}. On failure, an error object.
-
-  return(tryCatch(eval(call), error = function(e) e))
 }
 
 ParseArguments <- function(args, defaults, allow.extra.args = FALSE) {
@@ -302,7 +292,7 @@ InferPeriodIndicesFromData <- function(y) {
   return(list(pre.period = pre.period, post.period = post.period))
 }
 
-PrettifyPercentage <- function(x, round.digits = 0) {
+PrettifyPercentage <- function(x, round.digits = 0L) {
   # Converts a number into a nicely formatted percentage.
   #
   # Args:
@@ -314,46 +304,69 @@ PrettifyPercentage <- function(x, round.digits = 0) {
   #
   # Examples:
   #   CausalImpact:::PrettifyPercentage(c(-0.125, 0.2), 2)
-  #   # [1] "-12.5%" "+20%"
+  #   # [1] "-12.50%" "+20.00%"
 
-  sign <- c("-", "+")[(sign(x) + 3) / 2]
-  value <- abs(round(100 * x, round.digits))
-  return(paste(sign, value, "%", sep = ""))
+  # Check input
+  assert_that(all(is.finite(x)))
+  assert_that(is.numeric(round.digits), is.scalar(round.digits),
+              round.digits >= 0)
+  round.digits <- as.integer(round.digits)
+
+  return(sprintf("%+0.*f%%", round.digits, 100 * x))
 }
 
-PrettifyNumber <- function(x, letter = "", round.digits = 1) {
+PrettifyNumber <- function(x, letter = "", round.digits = 1L) {
   # Converts a number into heavily rounded human-readible format.
   #
   # Args:
   #   x:            Input scalar or vector of type numeric.
   #   letter:       Thousand value to round to. Possible values: "" (automatic),
   #                 "B" (billion), "M" (million), "K" (thousand), "none" (1).
-  #   round.digits: Round the result to this number of decimal places.
+  #   round.digits: Round the result to this number of decimal places if abs(x)
+  #                 is at least 1 or <letter> is specified. If abs(x) is less
+  #                 than 1, and if no <letter> is specified, <round.digits> is
+  #                 interpreted as the number of significant digits.
   #
   # Returns:
   #   string of formatted values
   #
   # Examples:
-  #   CausalImpact:::PrettifyNumber(123456)
-  #   # [1] "123.5K"
+  #   CausalImpact:::PrettifyNumber(c(0.123, 123, 123456))
+  #   # [1] "0.1"    "123.0"  "123.5K"
+  #   CausalImpact:::PrettifyNumber(3995, letter = "K", round.digits = 2)
+  #   # [1] "4.00K"
+  #   CausalImpact:::PrettifyNumber(1.234e-3, round.digits = 2)
+  #   # [1] "0.0012"
+
+  # Check input
+  assert_that(is.numeric(x))
+  assert_that(is.character(letter))
+  assert_that(all(letter %in% c("", "B", "M", "K", "none")))
+  assert_that(is.numeric(round.digits), round.digits[1] >= 0)
+  round.digits <- as.integer(round.digits[1])
 
   letter <- rep(letter, length.out = length(x))
-  output <- sapply(1 : length(x), function(index) {
-    if ((letter[index] == "" && abs(x[index]) >= 1e9) ||
-        letter[index] == "B") {
-      paste(round(x[index] / 1e9, round.digits), "B", sep = "")
-    } else if ((letter[index] == "" && abs(x[index]) >= 1e6) ||
-               letter[index] == "M") {
-      paste(round(x[index] / 1e6, round.digits), "M", sep = "")
-    } else if ((letter[index] == "" && abs(x[index]) >= 1e3) ||
-               letter[index] == "K") {
-      paste(round(x[index] / 1e3, round.digits), "K", sep = "")
-    } else if (letter[index] == "none") {
-      round(x[index], 0)
+  PrettifySingleNumber <- function(x, letter, round.digits) {
+    if (is.na(x) && !is.nan(x)) {
+      return("NA")
+    } else if (!is.finite(x)) {
+      return(as.character(x))
+    } else if ((letter == "" && abs(x) >= 1e9) || letter == "B") {
+      return(sprintf("%0.*fB", round.digits, x / 1e9))
+    } else if ((letter == "" && abs(x) >= 1e6) || letter == "M") {
+      return(sprintf("%0.*fM", round.digits, x / 1e6))
+    } else if ((letter == "" && abs(x) >= 1e3) || letter == "K") {
+      return(sprintf("%0.*fK", round.digits, x / 1e3))
+    } else if (abs(x) >= 1) {
+      return(sprintf("%0.*f", round.digits, x))
     } else {
-      round(x[index], 0)
+      # Calculate position of first non-zero digit after the decimal point
+      first.nonzero <- - floor(log10(abs(x)))
+      return(sprintf("%0.*f", round.digits + first.nonzero - 1, x))
     }
-  })
+  }
+  output <- sapply(seq_along(x), function(index) {
+    PrettifySingleNumber(x[index], letter[index], round.digits)})
   return(output)
 }
 
