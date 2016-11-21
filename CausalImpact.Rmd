@@ -4,6 +4,7 @@ output:
   html_document:
     css: CausalImpact.css
     highlight: textmate
+    self_contained: no
     toc: yes
     toc_depth: 2
   pdf_document:
@@ -267,7 +268,7 @@ Inferring causal impact using Bayesian structural time-series models.\
 http://research.google.com/pubs/pub41854.html
 
 ### Discussion forum
-http://stats.stackexchange.com/\
+http://stats.stackexchange.com/
 
 \
 
