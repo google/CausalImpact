@@ -118,9 +118,16 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
                        data, fill = "SlateGray2")
 
   # Add pre-period markers
-  xintercept <- CreatePeriodMarkers(impact$model$pre.period,
-                                    impact$model$post.period,
-                                    range(data$t))
+  post.period = impact$model$post.period
+  if (class(post.period) == "Date"){
+    xintercept <- CreatePeriodMarkers(impact$model$pre.period,
+                                      impact$model$post.period,
+                                      range(data$t))
+  }else{
+    time.range = unique(data$t)
+    xintercept = as.numeric(time.range[ c(post.period[1], post.period[2])])
+  }
+  
   q <- q + geom_vline(xintercept = xintercept,
                       colour = "darkgrey", size = 0.8, linetype = "dashed")
 
