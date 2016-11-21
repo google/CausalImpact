@@ -4,7 +4,6 @@ output:
   html_document:
     css: CausalImpact.css
     highlight: textmate
-    self_contained: no
     toc: yes
     toc_depth: 2
   pdf_document:
