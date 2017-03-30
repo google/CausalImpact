@@ -36,12 +36,17 @@ FormatInputData <- function(data) {
   # Checks and formats the <data> argument provided to CausalImpact().
   #
   # Args:
-  #   data: zoo object or data frame
+  #   data: a zoo object, a vector, a matrix, or a data frame.
   #
   # Returns:
   #   correctly formatted zoo object
 
-  # If <data> is a data frame and the first column is 'date', try to convert
+  # Check if `data` is a valid data type: a zoo object, a numerical vector, a
+  # matrix, or a data frame.
+  assert_that(is.zoo(data) || is.data.frame(data) ||
+              ((is.vector(data) || is.matrix(data)) && is.numeric(data)))
+
+  # If `data` is a data frame and the first column is 'date', try to convert.
   if (is.data.frame(data) && tolower(names(data)[1]) %in% c("date", "time")) {
     if (class(data$date) == "Date") {
       data <- zoo(data[, -1], data$date)
@@ -51,8 +56,9 @@ FormatInputData <- function(data) {
     }
   }
 
-  # Try to convert to zoo object
+  # Try to convert to zoo object, and assert that data is numeric.
   data <- TryStop(as.zoo(data), "could not convert input data to zoo object")
+  assert_that(is.numeric(data))
 
   # Ensure <data> is formatted in such a way that rows represent time points
   if (is.null(ncol(data))) {
@@ -66,53 +72,67 @@ FormatInputData <- function(data) {
   if (ncol(data) >= 2) {
     assert_that(!anyNA(data[, -1]))
   }
+
+  # Convert data from integer to double if necessary; this avoids overflow
+  # problems if data values are large (i.e., close to the maximum range of
+  # integer values).
+  if (is.integer(data)) {
+    data.matrix <- coredata(data)
+    coredata(data) <- matrix(as.numeric(data.matrix), nrow = nrow(data.matrix),
+                             ncol = ncol(data.matrix),
+                             dimnames = dimnames(data.matrix))
+  }
+
   return(data)
 }
 
 FormatInputPrePostPeriod <- function(pre.period, post.period, data) {
-  # Checks and formats the <pre.period> and <post.period> input arguments.
+  # Checks `pre.period` and `post.period` input arguments, and returns the
+  # corresponding time series indices.
   #
   # Args:
-  #   pre.period: two-element vector
-  #   post.period: two-element vector
-  #   data: already-checked zoo object, for reference only
+  #   pre.period:  two-element vector of pre-period boundaries in the time unit
+  #                of `time(data)`.
+  #   post.period: two-element vector of post-period boundaries in the time unit
+  #                of `time(data)`.
+  #   data:        already-checked zoo object, for reference only.
+  #
+  # Returns:
+  #   List with entries `pre.period` and `post.period`, containing indices of
+  #   period boundaries (relative to `time(data)`).
 
   assert_that(!is.null(pre.period))
   assert_that(!is.null(post.period))
   assert_that(length(pre.period) == 2, length(post.period) == 2)
   assert_that(!anyNA(pre.period), !anyNA(post.period))
-  if (class(time(data)) != class(pre.period) ||
-      class(time(data)) != class(post.period)) {
-    if (class(time(data)) == "integer") {
-      pre.period <- as.integer(pre.period)
-      post.period <- as.integer(post.period)
-    } else if (class(time(data)) == "numeric") {
-      pre.period <- as.numeric(pre.period)
-      post.period <- as.numeric(post.period)
-    } else {
-      stop(paste0("pre.period (", class(pre.period), ") and post.period (",
-                  class(post.period), ") should have the same class as the ",
-                  "time points in the data (", class(time(data)), ")"))
-    }
-  }
+  assert(isTRUE(all.equal(class(time(data)), class(pre.period))) ||
+         (is.numeric(time(data)) && is.numeric(pre.period)),
+         error = paste0("pre.period (", class(pre.period)[1], ") ",
+                        "must have the same class as the time points in the ",
+                        "data (", class(time(data))[1], ")"))
+  assert(isTRUE(all.equal(class(time(data)), class(post.period))) ||
+         (is.numeric(time(data)) && is.numeric(post.period)),
+         error = paste0("post.period (", class(post.period)[1], ") ",
+                        "must have the same class as the time points in the ",
+                        "data (", class(time(data))[1], ")"))
   if (pre.period[1] < start(data)) {
     warning(paste0("Setting pre.period[1] to start of data: ", start(data)))
-    pre.period[1] <- start(data)
   }
   if (pre.period[2] > end(data)) {
     warning(paste0("Setting pre.period[2] to end of data: ", end(data)))
-    pre.period[2] <- end(data)
   }
   if (post.period[2] > end(data)) {
     warning(paste0("Setting post.period[2] to end of data: ", end(data)))
-    post.period[2] <- end(data)
   }
-  data.pre.period <- window(data, start = pre.period[1], end = pre.period[2])
-  assert(length(time(data.pre.period)) >= 3,
+
+  period.indices <- list(
+      pre.period = GetPeriodIndices(pre.period, time(data)),
+      post.period = GetPeriodIndices(post.period, time(data)))
+  assert(diff(period.indices$pre.period) >= 2,
          "pre.period must span at least 3 time points")
-  assert_that(post.period[2] >= post.period[1])
-  assert_that(post.period[1] > pre.period[2])
-  return(list(pre.period = pre.period, post.period = post.period))
+  assert_that(period.indices$post.period[1] > period.indices$pre.period[2])
+
+  return(period.indices)
 }
 
 FormatInputForCausalImpact <- function(data, pre.period, post.period,
@@ -146,7 +166,7 @@ FormatInputForCausalImpact <- function(data, pre.period, post.period,
     data <- FormatInputData(data)
   }
 
-  # Check <pre.period> and <post.period>
+  # Check `pre.period` and `post.period`, and convert them to period indices.
   if (!is.null(data)) {
     checked <- FormatInputPrePostPeriod(pre.period, post.period, data)
     pre.period <- checked$pre.period
@@ -188,6 +208,39 @@ FormatInputForCausalImpact <- function(data, pre.period, post.period,
               post.period.response = post.period.response, alpha = alpha))
 }
 
+GetPeriodIndices <- function(period, times) {
+  # Computes indices belonging to a period in data.
+  #
+  # Args:
+  #   period:  two-element vector specifying start and end of a period, having
+  #            the same data type as `times. The range from `period[1]` to
+  #            `period[2]` must have an intersect with `times`.
+  #   times:   vector of time points; can be of integer or of POSIXct type.
+  #
+  # Returns:
+  #   A two-element vector with the indices of the period start and end within
+  #   `times`.
+
+  # Check input
+  assert_that(length(period) == 2)
+  assert_that(!anyNA(times))
+  assert_that(identical(class(period), class(times)) ||
+              (is.numeric(period) && is.numeric(times)))
+  # Check if period boundaries are in the right order, and if `period` has an
+  # overlap with `times`.
+  assert_that(period[1] <= period[2])
+  assert_that(period[1] <= tail(times, 1), period[2] >= times[1])
+
+  # Look up values of start and end of period in `times`; also works if the
+  # period start and end time are not exactly present in the time series.
+  indices <- seq_along(times)
+  is.period <- (period[1] <= times) & (times <= period[2])
+  # Make sure the period does match any time points.
+  assert(any(is.period), "The period must cover at least one data point")
+  period.indices <- range(indices[is.period])
+  return(period.indices)
+}
+
 CausalImpact <- function(data = NULL,
                          pre.period = NULL,
                          post.period = NULL,
@@ -212,19 +265,28 @@ CausalImpact <- function(data = NULL,
   #                its time indices will be used to format the x-axis in
   #                \code{plot()}.
   #
-  #   pre.period:  A vector of two indices specifying the first and the last
-  #                time point of the pre-intervention period in the response
-  #                vector \code{y}. This period can be thought of as a training
-  #                period, used to determine the relationship between the
-  #                response variable and the covariates.
+  #   pre.period:  A vector specifying the first and the last time point of the
+  #                pre-intervention period in the response vector \code{y}. This
+  #                period can be thought of as a training period, used to
+  #                determine the relationship between the response variable and
+  #                the covariates. If \code{data} is a \code{zoo} object with
+  #                a \code{time} attribute, \code{pre.period} must be indicated
+  #                using the same time scale (i.e. using the same class as
+  #                \code{time(data)}, see examples). If \code{data} doesn't have
+  #                a \code{time} attribute, \code{post.period} is indicated with
+  #                indices.
   #
-  #   post.period: A vector of two indices specifying the first and the last day
-  #                of the post-intervention period we wish to study. This is the
-  #                period after the intervention has begun whose effect we are
+  #   post.period: A vector specifying the first and the last day of the
+  #                post-intervention period we wish to study. This is the period
+  #                after the intervention has begun whose effect we are
   #                interested in. The relationship between response variable and
   #                covariates, as determined during the pre-period, will be used
   #                to predict how the response variable should have evolved
-  #                during the post-period had no intervention taken place.
+  #                during the post-period had no intervention taken place. If
+  #                \code{data} is a \code{zoo} object with a \code{time}
+  #                attribute, \code{post.period} must be indicated using the
+  #                same time scale. If \code{data} doesn't have a \code{time}
+  #                attribute, \code{post.period} is indicated with indices.
   #
   #   model.args:  Optional arguments that can be used to adjust the default
   #                construction of the state-space model used for inference.
@@ -255,7 +317,12 @@ CausalImpact <- function(data = NULL,
   #     series:  observed data, counterfactual, pointwise and cumulative impact
   #     summary: summary table
   #     report:  verbal description of the analysis
-  #     model:   contains bsts.model, the fitted model returned by bsts()
+  #     model:   list with four elements \code{pre.period}, \code{post.period},
+  #              \code{bsts.model} and \code{alpha}. \code{pre.period} and
+  #              \code{post.period} indicate the first and last time point of
+  #              the time series in the respective period, \code{bsts.model} is
+  #              the fitted model returned by \code{bsts()}, and \code{alpha}
+  #              is the user-specified tail-area probability.
   #
   # Optional arguments for model.args:
   #   niter:              number of MCMC iterations
@@ -269,6 +336,7 @@ CausalImpact <- function(data = NULL,
   # or the vignette.
   #
   # Examples:
+  #   # Time series without dates:
   #   set.seed(1)
   #   x1 <- 100 + arima.sim(model = list(ar = 0.999), n = 100)
   #   y <- 1.2 * x1 + rnorm(100)
@@ -283,6 +351,17 @@ CausalImpact <- function(data = NULL,
   #   summary(impact, "report")
   #   plot(impact)
   #
+  #   # Daily time series:
+  #   times <- seq.Date(as.Date("2015-01-01"), by = 1, length.out = 100)
+  #   data <- zoo(cbind(y, x1), times)
+  #
+  #   impact <- CausalImpact(data, times[pre.period], times[post.period])
+  #
+  #   summary(impact)
+  #   summary(impact, "report")
+  #   plot(impact)
+  #
+  #   # Analysis based on a `bsts` model:
   #   post.period.response <- y[post.period[1] : post.period[2]]
   #   post.period.response[post.period[1] : post.period[2]] <- NA
   #   ss <- AddLocalLevel(list(), y)
@@ -305,43 +384,15 @@ CausalImpact <- function(data = NULL,
   # Depending on input, dispatch to the appropriate Run* method()
   if (!is.null(data)) {
     impact <- RunWithData(data, pre.period, post.period, model.args, alpha)
+    # Return pre- and post-period in the time unit of the time series.
+    times <- time(data)
+    impact$model$pre.period <- times[pre.period]
+    impact$model$post.period <- times[post.period]
   } else {
     impact <- RunWithBstsModel(bsts.model, post.period.response, alpha)
   }
+
   return(impact)
-}
-
-# TODO(alhauser): move this function to impact_misc.R for consistency.
-GetPeriodIndices <- function(period, times) {
-  # Computes indices belonging to a period in data.
-  #
-  # Args:
-  #   period:  two-element vector specifying start and end of a period, having
-  #            the same data type as <times>. The range from period[1] to
-  #            period[2] must have an intersect with <times>.
-  #   times:   vector of time points; can be of integer or of POSIXct type.
-  #
-  # Returns:
-  #   A two-element vector with the indices of the period start and end within
-  #   <times>.
-
-  # Check input
-  assert_that(length(period) == 2)
-  assert_that(!anyNA(times))
-  assert_that(identical(class(period), class(times)))
-  # Check if period boundaries are in the right order, and if <period> has an
-  # overlap with <times>
-  assert_that(period[1] <= period[2])
-  assert_that(period[1] <= tail(times, 1), period[2] >= times[1])
-
-  # Look up values of start and end of period in <times>; also works if the
-  # period start and end time are not exactly present in the time series.
-  indices <- seq_along(times)
-  is.period <- (period[1] <= times) & (times <= period[2])
-  # Make sure the period does match any time points
-  assert(any(is.period), "The period must cover at least one data point")
-  period.indices <- range(indices[is.period])
-  return(period.indices)
 }
 
 RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
@@ -349,17 +400,21 @@ RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
   #
   # Args:
   #   data:        zoo object of response variable and covariates
-  #   pre.period:  two-element vector specifying the pre-period limits
-  #   post.period: two-element vector specifying the post-period limits
+  #   pre.period:  two-element vector specifying the indices of the  pre-period
+  #                limits.
+  #   post.period: two-element vector specifying the indices of the post-period
+  #                limits.
   #   model.args:  list of model arguments
   #   alpha:       tail-probabilities of posterior intervals
   #
   # Returns:
   #   See CausalImpact().
 
-  # Zoom in on data in modeling range
-  pre.period[1] <- max(pre.period[1], which(!is.na(data[, 1]))[1])
-  data.modeling <- window(data, start = pre.period[1])
+  times <- time(data)
+
+  # Zoom in on data in modeling range.
+  pre.period[1] <- max(pre.period[1], which.max(!is.na(data[, 1])))
+  data.modeling <- window(data, start = times[pre.period[1]])
   if (is.null(ncol(data.modeling))) {
     dim(data.modeling) <- c(length(data.modeling), 1)
   }
@@ -372,25 +427,28 @@ RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
     UnStandardize <- sd.results$UnStandardize
   }
 
-  # Set observed response after pre-period to NA
-  data.modeling[time(data.modeling) > pre.period[2], 1] <- NA
+  # Set observed response after pre-period to NA.
+  window(data.modeling[, 1], start = times[pre.period[2] + 1]) <- NA
 
   # Construct model and perform inference
   bsts.model <- ConstructModel(data.modeling, model.args)
 
   # Compile posterior inferences
   if (!is.null(bsts.model)) {
-    y.cf <- data[time(data) > pre.period[2], 1]
-    post.period.indices <- GetPeriodIndices(post.period, time(data.modeling))
+    y.cf <- window(data[, 1], start = times[pre.period[2] + 1])
+    # We need to adapt post-period indices for `CompilePosteriorInferences()` to
+    # specify start and end of the post-period relative to pre.period[1], not
+    # relative to the start of the time series; `CompilePosteriorInferences()`
+    # only sees the data from the beginning of the pre-period.
     inferences <- CompilePosteriorInferences(bsts.model, y.cf,
-                                             post.period.indices, alpha,
-                                             UnStandardize)
+                                             post.period - pre.period[1] + 1,
+                                             alpha, UnStandardize)
   } else {
     inferences <- CompileNaInferences(data[, 1])
   }
 
   # Extend <series> to cover original range (padding with NA as necessary)
-  empty <- zoo(, time(data))
+  empty <- zoo(, times)
   inferences$series <- merge(inferences$series, empty, all = TRUE)
   assert_that(nrow(inferences$series) == nrow(data))
 
@@ -402,8 +460,8 @@ RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
   names(inferences$series)[2] <- "cum.response"
 
   # Return 'CausalImpact' object
-  model <- list(pre.period = pre.period,
-                post.period = post.period,
+  model <- list(pre.period = times[pre.period],
+                post.period = times[post.period],
                 model.args = model.args,
                 bsts.model = bsts.model,
                 alpha = alpha)
@@ -434,6 +492,9 @@ RunWithBstsModel <- function(bsts.model, post.period.response, alpha = 0.05) {
                      paste0("bsts.model must have been fitted on data where ",
                             "the values in the post-intervention period have ",
                             "been set to NA"))
+  if (is.integer(time(bsts.model$original.series))) {
+    indices <- lapply(indices, as.integer)
+  }
 
   # Compile posterior inferences
   inferences <- CompilePosteriorInferences(bsts.model = bsts.model,
@@ -448,8 +509,9 @@ RunWithBstsModel <- function(bsts.model, post.period.response, alpha = 0.05) {
   names(inferences$series)[2] <- "cum.response"
 
   # Return 'CausalImpact' object
-  model <- list(pre.period = indices$pre.period,
-                post.period = indices$post.period,
+  times <- time(bsts.model$original.series)
+  model <- list(pre.period = times[indices$pre.period],
+                post.period = times[indices$post.period],
                 bsts.model = bsts.model,
                 alpha = alpha)
   impact <- list(series = inferences$series,

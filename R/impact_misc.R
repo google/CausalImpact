@@ -43,13 +43,13 @@ repmat <- function(X, m, n) {
   matrix(t(matrix(X, mx, nx * n)), mx * m, nx * n, byrow = TRUE)
 }
 
-is.wholenumber <- function(x, tol = .Machine$double.eps ^ 0.5) {
+is.wholenumber <- function(x, tolerance = .Machine$double.eps ^ 0.5) {
   # Checks whether a number is a whole number. This is not the same as
   # \code{is.integer()}, which tests the data type.
   #
   # Args:
-  #   x: input scalar or vector
-  #   tol: tolerance
+  #   x:         input scalar or vector
+  #   tolerance: tolerance
   #
   # Returns:
   #   boolean
@@ -58,7 +58,7 @@ is.wholenumber <- function(x, tol = .Machine$double.eps ^ 0.5) {
   #   CausalImpact:::is.wholenumber(c(1, 1.0, 1.2))
   #   # [1]  TRUE  TRUE FALSE
 
-  return(abs(x - round(x)) < tol)
+  return(abs(x - round(x)) < tolerance)
 }
 
 cumsum.na.rm <- function(x) {
@@ -87,19 +87,14 @@ cumsum.na.rm <- function(x) {
 }
 
 assert <- function(expr = TRUE, error = "") {
-  # Throws a custom error message if a condition is not fulfilled. This is an
-  # equally simple and useful R implementation of the corresponding MATLAB
-  # function. Note that this function is never silenced, and thus has different
-  # semantics than the assert-during-debug-but-silence-in-production idea
-  # implemented in other languages.
-  #
-  # This function is similar to `assertthat::assert_that()`. The main difference
-  # is that `assert()` allows for a custom error message, while the current CRAN
+  # Throws a custom error message if a condition is not fulfilled. This function
+  # is similar to `assertthat::assert_that()`. The main difference is that
+  # `assert()` allows for a custom error message, while the current CRAN
   # version of the `assertthat` package (0.1) does not.
   #
   # Args:
   #   expr:  expression that evaluates to a logical
-  #   error: error message if expression evaluates to \code{FALSE}
+  #   error: error message if expression does not evaluate to \code{TRUE}
   #
   # Returns:
   #   Returns quietly or fails with an error.
@@ -112,8 +107,34 @@ assert <- function(expr = TRUE, error = "") {
   # Documentation:
   #   seealso: assert_that
 
-  if (! expr) {
+  if (!isTRUE(expr)) {
     stop(error, call. = (error == ""))
+  }
+}
+
+is.numerically.equal <- function(x, y, tolerance = .Machine$double.eps ^ 0.5) {
+  # Tests whether two numbers are 'numerically equal' by checking whether their
+  # relative difference is smaller than a given tolerance. 'Relative difference'
+  # is defined as the absolute difference of the values divided by the maximum
+  # of their absolute values.
+  #
+  # The difference between this function and `all.equal` is that the latter
+  # checks the absolute difference rather than the relative difference.
+  #
+  # Args:
+  #   x:         one of the values to be compared.
+  #   y:         one of the values to be compared.
+  #   tolerance: tolerance for the relative difference of `x` and `y`.
+
+  assert_that(is.numeric(x), is.scalar(x))
+  assert_that(is.numeric(y), is.scalar(y))
+  assert_that(is.numeric(tolerance), is.scalar(tolerance), tolerance > 0)
+
+  if (x == 0 && y == 0) {
+    return(TRUE)
+  } else {
+    relative.difference <- abs(x - y) / max(abs(x), abs(y))
+    return(relative.difference <= tolerance)
   }
 }
 

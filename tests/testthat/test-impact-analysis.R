@@ -113,7 +113,9 @@ test_that("FormatInputForCausalImpact", {
   expect_equal(checked$data, expected.data)
 
   # Test bad <data>
-  bad.data <- list(NULL, NA, as.numeric(NA), "foo", list(1, 2, 3, 4))
+  bad.data <- list(NULL, NA, as.numeric(NA), letters[1 : 10], list(1, 2, 3, 4),
+                   matrix(letters[1 : 10], ncol = 2),
+                   data.frame(y = letters[1 : 10], x = letters[11 : 20]))
   invisible(lapply(bad.data, function(data) {
     expect_error(FormatInputForCausalImpact(data, c(1, 3), c(4, 4),
                                             model.args, NULL, NULL, alpha))
@@ -495,6 +497,61 @@ test_that("CausalImpact.RunWithData.PreAndPostPeriod", {
   expect_false(anyNA(impact$series[c(21:30, 41:50), -effect.cols]))
 })
 
+test_that("CausalImpact.RunWithData.MissingValues", {
+  # Create a time series without gap between pre- and post-period. Test that
+  # missing values in the last entries of the pre-period do not lead to
+  # estimation errors.
+  set.seed(42)
+  data <- rnorm(30, mean = 100, sd = 10)
+  data[18 : 20] <- NA
+  pre.period <- c(1, 20)
+  post.period <- c(21, 30)
+  model.args <- list(niter = 100)
+  expect_error(impact <- CausalImpact(data, pre.period, post.period,
+                                      model.args),
+               NA)
+  # Test that all columns in the result series except those associated with
+  # point predictions have missing values at the time points the result time
+  # series has missing values.
+  point.pred.cols <- grep("^point\\.pred", names(impact$series))
+  expect_true(all(is.na(impact$series[18 : 20, -point.pred.cols])))
+  expect_false(anyNA(impact$series[18 : 20, point.pred.cols]))
+  expect_false(anyNA(impact$series[-(18 : 20), ]))
+
+  # Create a time series with a gap between pre- and post-period, and fit three
+  # CausalImpact models: one on the raw data, one after setting the last entries
+  # of the gap to NA, and one after setting earlier entries of the gap to NA.
+  # Test that the estimated effects of the 3 fits are nearly identical.
+  set.seed(42)
+  data <- rnorm(30, mean = 100, sd = 10)
+  pre.period <- c(1, 10)
+  post.period <- c(21, 30)
+  model.args <- list(niter = 100)
+  set.seed(1)
+  suppressWarnings(impact <- CausalImpact(data, pre.period, post.period,
+                                          model.args))
+  data.na.end <- replace(data, 18 : 20, NA)
+  set.seed(1)
+  suppressWarnings(impact.na.end <- CausalImpact(data.na.end, pre.period,
+                                                 post.period, model.args))
+  data.na.middle <- replace(data, 12 : 15, NA)
+  set.seed(1)
+  suppressWarnings(impact.na.middle <- CausalImpact(data.na.middle, pre.period,
+                                                    post.period, model.args))
+  # Do not compare columns with cumulative response (which is impacted by NAs in
+  # response) and cumulative predictions (which are set to cumulative response
+  # before the post-period.)
+  exclude.columns <- grep("^cum\\.(response|pred)", names(impact$series))
+  expect_equal(impact$series[-(18 : 20), - exclude.columns],
+               impact.na.end$series[-(18 : 20), - exclude.columns],
+               tolerance = 1e-5)
+  expect_equal(impact$series[-(12 : 15), - exclude.columns],
+               impact.na.middle$series[-(12 : 15), - exclude.columns],
+               tolerance = 1e-5)
+  expect_equal(impact$summary, impact.na.end$summary, tolerance = 1e-5)
+  expect_equal(impact$summary, impact.na.middle$summary, tolerance = 1e-5)
+})
+
 test_that("CausalImpact.RunWithData.StandardizeData", {
   # Test with/without <standardize.data>
   set.seed(1)
@@ -576,6 +633,37 @@ test_that("CausalImpact.RunWithData.ShortTimeSeries", {
   expect_output(print(impact), "(Inference aborted)", fixed = TRUE)
   expect_output(print(impact, "report"), "(Report empty)", fixed = TRUE)
   expect_error(plot(impact), "cannot create plot")
+})
+
+test_that("CausalImpact.RunWithData.LargeIntegerInput", {
+  # Creates an input time series with large integer values, tests that
+  # CausalImpact processes them without integer overflow.
+  set.seed(1)
+  x1 <- 100 + arima.sim(model = list(ar = 0.999), n = 100)
+  y <- 1.2 * x1 + rnorm(100)
+  y[71:100] <- y[71:100] + 10
+  data <- cbind(as.integer(1e6 * y), as.integer(1e6 * x1))
+  pre.period <- c(1, 70)
+  post.period <- c(71, 100)
+  expect_error(impact <- CausalImpact(data, pre.period, post.period), NA)
+
+  # Rescales the time series to smaller values, refits the model and tests that
+  # both model outcomes are identical (up to numerical imprecisions).
+  rescaled.data <- data / 1e6
+  rescaled.impact <- CausalImpact(rescaled.data, pre.period, post.period)
+  original.summary <- impact$summary
+  rescaled.summary <- rescaled.impact$summary
+  scaled.columns <- c("Actual", "Pred", "Pred.lower", "Pred.upper", "Pred.sd",
+                      "AbsEffect", "AbsEffect.lower", "AbsEffect.upper",
+                      "AbsEffect.sd")
+  unscaled.columns <- c("RelEffect", "RelEffect.lower", "RelEffect.upper",
+                        "RelEffect.sd", "alpha", "p")
+  expect_equal(original.summary[, scaled.columns] / 1e6,
+               rescaled.summary[, scaled.columns],
+               tolerance = 0.01)
+  expect_equal(original.summary[, unscaled.columns],
+               rescaled.summary[, unscaled.columns],
+               tolerance = 0.01)
 })
 
 test_that("CausalImpact.RunWithBstsModel", {

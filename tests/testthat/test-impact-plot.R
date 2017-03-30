@@ -16,6 +16,78 @@ testthat::context("Unit tests for impact_plot.R")
 
 # Author: kbrodersen@google.com (Kay Brodersen)
 
+test_that("CreatePeriodMarkers", {
+  CreatePeriodMarkers <- CausalImpact:::CreatePeriodMarkers
+
+  # Creates a time series with integer time points, and specifies a pre- and
+  # post-period that together cover all time points. Test that only one period
+  # marker is created, specifying the last time point of the pre-period.
+  times <- 1:50
+  pre.period <- c(1L, 30L)
+  post.period <- c(31L, 50L)
+  markers <- CreatePeriodMarkers(pre.period, post.period, times)
+  expect_equal(markers, 30)
+
+  # Creates a time series with numeric time points, and specifies a pre- and
+  # post-period that together cover all time points, but whose end points do not
+  # match any time points in the series. Test that only one period marker is
+  # created.
+  times <- as.numeric(1:50)
+  pre.period <- c(0.5, 30.2)
+  post.period <- c(30.7, 50.5)
+  markers <- CreatePeriodMarkers(pre.period, post.period, times)
+  expect_equal(markers, 30)
+
+  # Creates a time series with numeric time points. Specifies a pre-period that
+  # starts after the beginning of the time series, a gap between pre- and
+  # post-period, and a post-period that does not last until the end of the data.
+  # Tests that four period markers are created.
+  times <- 1:50
+  pre.period <- c(11L, 20L)
+  post.period <- c(31L, 40L)
+  markers <- CreatePeriodMarkers(pre.period, post.period, times)
+  expect_equal(markers, c(11, 20, 31, 40))
+
+  # Creates a daily time series, and specifies a pre- and post-period that
+  # together cover all time points. Test that only one period marker is created.
+  times <- seq.Date(as.Date("2014-01-01"), by = 1, length.out = 50)
+  # Time series runs from 2014-01-01 till 2014-02-19.
+  pre.period <- as.Date(c("2014-01-01", "2014-01-30"))
+  post.period <- as.Date(c("2014-01-31", "2014-02-19"))
+  markers <- CreatePeriodMarkers(pre.period, post.period, times)
+  expect_equal(markers, as.numeric(as.Date("2014-01-30")))
+
+  # Creates a weekly time series, and specifies a pre- and post-period that
+  # together cover all time points, but whose end points do not match any time
+  # points in the series. Test that only one period marker is created.
+  times <- seq.Date(as.Date("2014-01-01"), by = 7, length.out = 50)
+  pre.period <- c(times[1] - 1, times[30] + 1)
+  post.period <- c(times[31] - 2, times[50] + 1)
+  markers <- CreatePeriodMarkers(pre.period, post.period, times)
+  expect_equal(markers, as.numeric(times[30]))
+
+  # Creates an hourly time series. Specifies a pre-period that starts after the
+  # beginning of the time series, a gap between pre- and post-period, and a
+  # post-period that does not last until the end of the data. Tests that four
+  # period markers are created.
+  times <- seq.POSIXt(strptime("2014-01-01 00:00:00",
+                               format = "%Y-%m-%d %H:%M:%S"),
+                      by = 3600, length.out = 48)
+  # Time series runs from 2014-01-01 00:00:00 till 2014-01-02 23:00:00.
+  pre.period <- as.POSIXct(strptime(c("2014-01-01 10:00:00",
+                                      "2014-01-01 20:00:00"),
+                                    format = "%Y-%m-%d %H:%M:%S"))
+  post.period <- as.POSIXct(strptime(c("2014-01-02 10:00:00",
+                                       "2014-01-02 20:00:00"),
+                                     format = "%Y-%m-%d %H:%M:%S"))
+  markers <- CreatePeriodMarkers(pre.period, post.period, times)
+  expect_equal(markers, as.numeric(strptime(c("2014-01-01 10:00:00",
+                                              "2014-01-01 20:00:00",
+                                              "2014-01-02 10:00:00",
+                                              "2014-01-02 20:00:00"),
+                                            format = "%Y-%m-%d %H:%M:%S")))
+})
+
 test_that("CreateImpactPlot", {
   CreateImpactPlot <- CausalImpact:::CreateImpactPlot
 

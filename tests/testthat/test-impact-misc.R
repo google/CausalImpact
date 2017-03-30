@@ -52,20 +52,24 @@ test_that("repmat", {
   expect_equal(repmat(c(10, 20), 1, 2), as.matrix(t(c(10, 20, 10, 20))))
 })
 
-test_that("IsWholeNumber", {
+test_that("is.wholenumber", {
   is.wholenumber <- CausalImpact:::is.wholenumber
 
   # Test empty input
-  expect_error(is.wholenumber())
+  expect_error(is.wholenumber(), "missing")
 
   # Test various standard cases
-  expect_error(is.wholenumber("a"))
+  expect_error(is.wholenumber("a"), "numeric")
   expect_equal(is.wholenumber(c(-1, 0, 1, 2, -1.1, 0.1, 1.1)),
-              c(TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE))
+               c(TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE))
   expect_equal(is.wholenumber(NA), NA)
 
   # Test documentation example
   expect_equal(is.wholenumber(c(1, 1.0, 1.2)), c(TRUE, TRUE, FALSE))
+
+  # Test different tolerances
+  expect_true(is.wholenumber(3.14, tolerance = 0.2))
+  expect_false(is.wholenumber(3.14, tolerance = 0.1))
 })
 
 test_that("cumsum.na.rm", {
@@ -90,6 +94,7 @@ test_that("cumsum.na.rm", {
 test_that("assert", {
   assert <- CausalImpact:::assert
 
+  # Test healthy input.
   expect_error(assert(), NA)
   expect_error(assert(TRUE), NA)
   expect_error(assert(TRUE, "foo"), NA)
@@ -98,6 +103,38 @@ test_that("assert", {
   expect_error(assert(FALSE, "foo"), "foo")
   expect_error(assert(3 > 5), "")
   expect_error(assert(3 > 5, "3 is not greater than 5"), "greater")
+
+  # Test that non-logical input produces an error.
+  bad.expr <- list(NA, 4, "test", expression(3 < 5), data.frame(x = 3, y = 5))
+  invisible(lapply(bad.expr, function(expr) {
+    expect_error(assert(expr, "test"), "test")
+  }))
+})
+
+test_that("is.numerically.equal", {
+  is.numerically.equal <- CausalImpact:::is.numerically.equal
+
+  # Test invalid input.
+  expect_error(is.numerically.equal(), "missing")
+  expect_error(is.numerically.equal("x", 3), "numeric")
+  expect_error(is.numerically.equal(1, c(2, 3)), "scalar")
+  expect_error(is.numerically.equal(1, 2, "tol"), "numeric")
+  expect_error(is.numerically.equal(1, 2, -1), "greater")
+
+  # Test valid input with two values being 'numerically equal' within the
+  # specified tolerance.
+  expect_true(is.numerically.equal(0, 0))
+  expect_true(is.numerically.equal(0, 0, tolerance = 1e-20))
+  expect_true(is.numerically.equal(1, 1))
+  expect_true(is.numerically.equal(-1, -1 + 1e-9))
+  expect_true(is.numerically.equal(1, -1, tolerance = 2.1))
+  expect_true(is.numerically.equal(0, 1, tolerance = 1.01))
+
+  # Test valid input with two values not being 'numerically equal' within the
+  # specified tolerance.
+  expect_false(is.numerically.equal(-1, -1.2))
+  expect_false(is.numerically.equal(-1e-15, 1e-15))
+  expect_false(is.numerically.equal(1, 1 + 1e-9, tolerance = 1e-10))
 })
 
 test_that("ParseArguments", {

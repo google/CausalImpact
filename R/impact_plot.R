@@ -58,30 +58,38 @@ CreateDataFrameForPlot <- function(impact) {
   return(data)
 }
 
-CreatePeriodMarkers <- function(pre.period, post.period, time.range) {
+CreatePeriodMarkers <- function(pre.period, post.period, times) {
   # Creates a vector of period markers to display.
   #
   # Args:
-  #   pre.period: vector of 2 time points that define the pre-period
-  #   post.period: vector of 2 time points that define the post-period
-  #   time.range: vector of 2 elements specifying range of timepoints in data
+  #   pre.period:  vector of 2 time points that define the pre-period.
+  #   post.period: vector of 2 time points that define the post-period.
+  #   times:       vector of time points.
   #
   # Returns:
-  #   vector of period markers that should be displayed
+  #   Vector of period markers that should be displayed, generally depicting the
+  #   first and last time points of pre- and post-period. The start of the pre-
+  #   period is not shown if it coincides with the first time point of the time
+  #   series; similarly, the last time point of the post-period is not shown if
+  #   it coincides with the last time point of the series. If there is no gap
+  #   between pre- and post-period, the start marker of the post-period is
+  #   omitted.
 
-  idx <- NULL
-  if (pre.period[1] > time.range[1]) {
-    idx <- c(idx, pre.period[1])
+  pre.period.indices <- GetPeriodIndices(pre.period, times)
+  post.period.indices <- GetPeriodIndices(post.period, times)
+  markers <- NULL
+  if (pre.period.indices[1] > 1) {
+    markers <- c(markers, times[pre.period.indices[1]])
   }
-  if (pre.period[2] < post.period[1] - 1) {
-    idx <- c(idx, pre.period[2])
+  markers <- c(markers, times[pre.period.indices[2]])
+  if (pre.period.indices[2] < post.period.indices[1] - 1) {
+    markers <- c(markers, times[post.period.indices[1]])
   }
-  idx <- c(idx, post.period[1] - 1)
-  if (post.period[2] < time.range[2]) {
-    idx <- c(idx, post.period[2])
+  if (post.period.indices[2] < length(times)) {
+    markers <- c(markers, times[post.period.indices[2]])
   }
-  class(idx) <- class(pre.period)
-  return(as.numeric(idx))
+  markers <- as.numeric(markers)
+  return(markers)
 }
 
 CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
@@ -120,7 +128,7 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
   # Add pre-period markers
   xintercept <- CreatePeriodMarkers(impact$model$pre.period,
                                     impact$model$post.period,
-                                    range(data$t))
+                                    time(impact$series))
   q <- q + geom_vline(xintercept = xintercept,
                       colour = "darkgrey", size = 0.8, linetype = "dashed")
 

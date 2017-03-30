@@ -90,13 +90,33 @@ test_that("ComputeCumulativePredictions", {
   expect_equal(names(cum.pred), c("cum.pred", "cum.pred.lower",
                                   "cum.pred.upper"))
 
-  # Test data <y> with missing data (NA) in pre-period
-  y[3] <- NA
-  cum.pred <- ComputeCumulativePredictions(y.samples, point.pred, y,
+  # Test data `y` with missing data (NA) early in the pre-period.
+  y.na <- y
+  y.na[3] <- NA
+  cum.pred <- ComputeCumulativePredictions(y.samples, point.pred, y.na,
                                            post.period.begin = 51,
                                            alpha = 0.05)
   expect_true(all(is.na(cum.pred[3, ])))
   expect_false(anyNA(cum.pred[-3, ]))
+
+  # Test data with a missing values in the last time points before the
+  # post-period.
+  y.na <- y
+  y.na[48 : 50] <- NA
+  cum.pred <- ComputeCumulativePredictions(y.samples, point.pred, y.na,
+                                           post.period.begin = 51,
+                                           alpha = 0.05)
+  expect_true(all(is.na(cum.pred[48 : 50, ])))
+  expect_false(anyNA(cum.pred[-(48 : 50), ]))
+
+  # Test that data with only missing values before the post-period throws an
+  # error.
+  y.na <- y
+  y.na[1 : 50] <- NA
+  expect_error(ComputeCumulativePredictions(y.samples, point.pred, y.na,
+                                            post.period.begin = 51,
+                                            alpha = 0.05),
+               "length")
 })
 
 test_that("CompileSummaryTable", {
@@ -209,8 +229,7 @@ test_that("CheckInputForCompilePosteriorInferences", {
   invisible(lapply(bad.y.cf, function(y.cf) {
     expect_error(CheckInputForCompilePosteriorInferences(bsts.model, y.cf,
                                                          post.period, alpha,
-                                                         UnStandardize),
-                 "y.cf", fixed = TRUE)
+                                                         UnStandardize))
   }))
 
   # Test bad <post.period>

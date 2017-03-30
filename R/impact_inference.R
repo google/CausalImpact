@@ -137,13 +137,16 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   # Compute posterior mean
   is.post.period <- (1 : length(y)) >= post.period.begin
   cum.pred.mean.pre <- cumsum.na.rm(as.vector(y)[1 : (post.period.begin - 1)])
+  non.na.indices <- which(!is.na(cum.pred.mean.pre[1:(post.period.begin - 1)]))
+  assert_that(length(non.na.indices) > 0)
+  last.non.na.index <- max(non.na.indices)
   cum.pred.mean.post <- cumsum(point.pred$point.pred[is.post.period]) +
-      cum.pred.mean.pre[post.period.begin - 1]
+      cum.pred.mean.pre[last.non.na.index]
   cum.pred.mean <- c(cum.pred.mean.pre, cum.pred.mean.post)
 
   # Check for overflow
-  assert(length(setdiff(which(is.na(cum.pred.mean)),
-                        which(is.na(y[1:(post.period.begin - 1)])))) == 0,
+  assert(identical(which(is.na(cum.pred.mean)),
+                   which(is.na(y[1:(post.period.begin - 1)]))),
          "unexpected NA found in cum.pred.mean")
 
   # Compute posterior interval
@@ -151,7 +154,7 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   cum.pred.upper.pre <- cum.pred.mean.pre
   y.samples.cum.post <- t(apply(y.samples[, is.post.period, drop = FALSE], 1,
                                 cumsum)) +
-      cum.pred.mean.pre[post.period.begin - 1]
+      cum.pred.mean.pre[last.non.na.index]
   if (sum(is.post.period) == 1) {
     y.samples.cum.post <- t(y.samples.cum.post)
   }
@@ -400,15 +403,29 @@ AssertCumulativePredictionsAreConsistent <- function(cum.pred, post.period,
   #   summary:           Summary table, as created by
   #                      \code{CompileSummaryTable()}.
 
-  assert(abs(cum.pred$cum.pred[post.period[2]] -
-             cum.pred$cum.pred[post.period[1] - 1] -
-             summary$Pred[2]) < 0.1, "bad cum.pred$cum.pred (mean)")
-  assert(abs(cum.pred$cum.pred.lower[post.period[2]] -
-             cum.pred$cum.pred.lower[post.period[1] - 1] -
-             summary$Pred.lower[2]) < 0.1, "bad cum.pred$lower")
-  assert(abs(cum.pred$cum.pred.upper[post.period[2]] -
-             cum.pred$cum.pred.upper[post.period[1] - 1] -
-             summary$Pred.upper[2]) < 0.1, "bad cum.pred$upper")
+  # Auxiliary function checking if one column of `cum.pred` is consistent with
+  # the corresponding number in `summary`.
+  AssertCumulativePredictionIsConsistent <- function(cum.pred.col,
+                                                     summary.entry,
+                                                     description) {
+    non.na.indices <- which(!is.na(cum.pred.col[1:(post.period[1] - 1)]))
+    assert_that(length(non.na.indices) > 0)
+    last.non.na.index <- max(non.na.indices)
+    assert(is.numerically.equal(cum.pred.col[post.period[2]] -
+                                cum.pred.col[last.non.na.index],
+                                summary.entry[2]),
+           paste0("The calculated ", description, " of the cumulative effect ",
+                  "is inconsistent with the previously calculated one. You ",
+                  "might try to run CausalImpact on a shorter time series ",
+                  "to avoid this problem."))
+  }
+
+  AssertCumulativePredictionIsConsistent(cum.pred$cum.pred, summary$Pred,
+                                         "mean")
+  AssertCumulativePredictionIsConsistent(cum.pred$cum.pred.lower,
+                                         summary$Pred.lower, "lower bound")
+  AssertCumulativePredictionIsConsistent(cum.pred$cum.pred.upper,
+                                         summary$Pred.upper, "upper bound")
 }
 
 CheckInputForCompilePosteriorInferences <- function(bsts.model, y.cf,
@@ -433,16 +450,6 @@ CheckInputForCompilePosteriorInferences <- function(bsts.model, y.cf,
   assert_that(class(bsts.model) == "bsts")
   assert_that(length(bsts.model$original.series) >= 2)
 
-  # Check <y.cf>
-  assert_that(is.zoo(y.cf) || is.vector(y.cf))
-  y.cf <- as.vector(y.cf)
-  assert_that(is.numeric(y.cf))
-  assert_that(length(y.cf) >= 1)
-  assert(!anyNA(y.cf), "NA values in y.cf not currently supported")
-  assert(all(is.na(tail(bsts.model$original.series, length(y.cf)))),
-         paste0("bsts.model$original.series must end on a stretch of NA ",
-                "at least as long as y.cf"))
-
   # Check <post.period>
   assert_that(is.vector(post.period))
   assert_that(is.numeric(post.period))
@@ -453,6 +460,17 @@ CheckInputForCompilePosteriorInferences <- function(bsts.model, y.cf,
   assert_that(cf.period.start <= post.period[1])
   assert_that(post.period[1] <= post.period[2])
   assert_that(post.period[2] <= length(bsts.model$original.series))
+
+  # Check <y.cf>
+  assert_that(is.zoo(y.cf) || is.vector(y.cf))
+  y.cf <- as.vector(y.cf)
+  assert_that(is.numeric(y.cf))
+  assert_that(length(y.cf) >= 1)
+  assert(!anyNA(y.cf[(post.period[1] : post.period[2]) - cf.period.start + 1]),
+         "NA values in the post-period not currently supported")
+  assert(all(is.na(tail(bsts.model$original.series, length(y.cf)))),
+         paste0("bsts.model$original.series must end on a stretch of NA ",
+                "at least as long as y.cf"))
 
   # Check <alpha>
   assert_that(is.numeric(alpha))

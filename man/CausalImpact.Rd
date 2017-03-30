@@ -25,7 +25,7 @@
   An alternative is to supply a custom model. In this case,
   the function is called with \code{bsts.model},
   \code{post.period.response}, and \code{alpha} (optional).
-  See Example 2 below.
+  See Example 3 below.
 }
 \usage{
   CausalImpact(data = NULL, pre.period = NULL,
@@ -43,21 +43,28 @@
   indices will be used to format the x-axis in
   \code{plot()}.}
 
-  \item{pre.period}{A vector of two indices specifying the
-  first and the last time point of the pre-intervention
-  period in the response vector \code{y}. This period can
-  be thought of as a training period, used to determine the
-  relationship between the response variable and the
-  covariates.}
+  \item{pre.period}{A vector specifying the first and the last time point of the
+  pre-intervention period in the response vector \code{y}. This
+  period can be thought of as a training period, used to
+  determine the relationship between the response variable and
+  the covariates. If \code{data} is a \code{zoo} object with
+  a \code{time} attribute, \code{pre.period} must be indicated
+  using the same time scale (i.e. using the same class as
+  \code{time(data)}, see Example 2 below). If \code{data} doesn't have
+  a \code{time} attribute, \code{post.period} is indicated with
+  indices.}
 
-  \item{post.period}{A vector of two indices specifying the
-  first and the last time point of the post-intervention
-  period we wish to study. This is the period after the
-  intervention has begun whose effect we are interested in.
-  The relationship between response variable and covariates,
-  as determined during the pre-period, will be used to
-  predict how the response variable would have evolved
-  during the post-period had no intervention taken place.}
+  \item{post.period}{A vector specifying the first and the last day of the
+  post-intervention period we wish to study. This is the period
+  after the intervention has begun whose effect we are
+  interested in. The relationship between response variable and
+  covariates, as determined during the pre-period, will be used
+  to predict how the response variable should have evolved
+  during the post-period had no intervention taken place. If
+  \code{data} is a \code{zoo} object with a \code{time}
+  attribute, \code{post.period} must be indicated using the
+  same time scale. If \code{data} doesn't have a \code{time}
+  attribute, \code{post.period} is indicated with indices.}
 
   \item{model.args}{Further arguments to adjust the default
   construction of the state-space model used for inference.
@@ -66,7 +73,7 @@
   knowledge about the volatility of the data. For even more
   control over the model, you can construct your own model
   using the \code{bsts} package and feed the fitted model
-  into \code{CausalImpact()}, as shown in Example 2.}
+  into \code{CausalImpact()}, as shown in Example 3.}
 
   \item{bsts.model}{Instead of passing in \code{data} and
   having \code{CausalImpact()} construct a model, it is
@@ -115,10 +122,12 @@
     corresponds to a one-sided hypothesis test.
     \item \code{report}. A suggested verbal
     interpretation of the results.
-    \item \code{model}. Additional analysis details,
-    including: \code{pre.period}, \code{post.period},
-    \code{model.args}, and \code{bsts.model} (the fitted
-    model returned by \code{bsts()}).
+    \item \code{model}. A list with four elements \code{pre.period},
+    \code{post.period}, \code{bsts.model} and \code{alpha}. \code{pre.period}
+    and \code{post.period} indicate the first and last time point of
+    the time series in the respective period, \code{bsts.model} is
+    the fitted model returned by \code{bsts()}, and \code{alpha}
+    is the user-specified tail-area probability.
   }
 
   The field \code{series} is a
@@ -230,8 +239,19 @@ plot(impact$model$bsts.model, "coefficients")
 # For further output, type:
 names(impact)
 
-
 # Example 2
+#
+# Daily time series: same data as in example 1, annotated
+# with dates.
+times <- seq.Date(as.Date("2015-01-01"), by = 1, length.out = 100)
+data <- zoo(cbind(y, x1), times)
+
+impact <- CausalImpact(data, times[pre.period], times[post.period])
+
+summary(impact) # Same as in example 1.
+plot(impact)    # Plot now has dates on the x axis.
+
+# Example 3
 #
 # For full flexibility, specify a custom model and pass the
 # fitted model to CausalImpact(). To run this example, run
