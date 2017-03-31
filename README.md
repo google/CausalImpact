@@ -17,9 +17,11 @@ library(CausalImpact)
 
 #### Getting started
 
-[Documentation and examples](http://google.github.io/CausalImpact/CausalImpact.html)
+[Video tutorial](https://www.youtube.com/watch?v=GTgZfCltMm8)
+
+[Documentation and examples](https://google.github.io/CausalImpact/CausalImpact.html)
 
 #### Further resources
 
 * Manuscript: [Brodersen et al., Annals of Applied Statistics (2015)](http://research.google.com/pubs/pub41854.html)
-* Discussion forum: http://stats.stackexchange.com/
+* Discussion forum: [StackExchange](http://stats.stackexchange.com/questions/tagged/causalimpact)
