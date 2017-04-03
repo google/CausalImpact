@@ -235,10 +235,10 @@ CompileSummaryTable <- function(y.post, y.samples.post,
                                    prob.upper)),
       AbsEffect.sd = c(sd(rowMeans(y.repmat.post - y.samples.post)),
                        sd(rowSums(y.repmat.post - y.samples.post))))
-  summary <- mutate(summary, RelEffect = AbsEffect / Pred,
-                    RelEffect.lower = AbsEffect.lower / Pred,
-                    RelEffect.upper = AbsEffect.upper / Pred,
-                    RelEffect.sd = AbsEffect.sd / Pred)
+  summary <- dplyr::mutate(summary, RelEffect = AbsEffect / Pred,
+                           RelEffect.lower = AbsEffect.lower / Pred,
+                           RelEffect.upper = AbsEffect.upper / Pred,
+                           RelEffect.sd = AbsEffect.sd / Pred)
   rownames(summary) <- c("Average", "Cumulative")
 
   # Add interval coverage, defined by alpha

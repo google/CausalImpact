@@ -1,4 +1,4 @@
-# Copyright 2014 Google Inc. All rights reserved.
+# Copyright 2014-2017 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -223,105 +223,6 @@ test_that("FormatInputForCausalImpact", {
     expect_error(FormatInputForCausalImpact(data, pre.period, post.period,
                                             model.args, NULL, NULL, alpha))
   }))
-})
-
-test_that("GetPeriodIndices.InvalidInput", {
-  GetPeriodIndices <- CausalImpact:::GetPeriodIndices
-
-  # Test missing input
-  expect_error(GetPeriodIndices(), "missing")
-
-  # Test wrong order of <period> and <times>
-  expect_error(GetPeriodIndices(1:200, c(101L, 200L)), "period")
-
-  # Test invalid times
-  times <- seq.Date(as.Date("2014-01-01"), as.Date("2014-01-01") + 199, by = 1)
-  bad.times <- list(NA, c(1:9, NA, 11:20), as.character(times))
-  invisible(lapply(bad.times, function(times) {
-    expect_error(GetPeriodIndices(c(101L, 200L), times), "times")
-  }))
-
-  # Test invalid period
-  bad.period <- list(NA, 1:100, 1:3, 200, c(150, 101))
-  invisible(lapply(bad.period, function(period) {
-    expect_error(GetPeriodIndices(period, 1:200), "period")
-  }))
-
-  # Test inconsistent period and times
-  times <- seq.Date(as.Date("2014-01-01"), as.Date("2014-01-01") + 199, by = 1)
-  period <- as.Date(c("2014-04-11", "2014-07-19"))  # 100 days
-  expect_error(GetPeriodIndices(c(101L, 200L), times), "class")
-  expect_error(GetPeriodIndices(period, 1:200), "class")
-
-  # Test period that is completely outside the range of <times>:
-  # - with integer time points
-  expect_error(GetPeriodIndices(c(-20L, -10L), 1:200), "period")
-  expect_error(GetPeriodIndices(c(201L, 210L), 1:200), "period")
-  #
-  # - with Date time points
-  times <- seq.Date(as.Date("2014-01-01"), as.Date("2014-01-01") + 199, by = 1)
-  expect_error(GetPeriodIndices(as.Date(c("2013-12-24", "2013-12-31")), times),
-               "period")
-  expect_error(GetPeriodIndices(as.Date(c("2014-12-24", "2014-12-31")), times),
-               "period")
-
-  # Test period that is inside the range of <times>, but so short it does not
-  # touch a single time point
-  expect_error(GetPeriodIndices(c(13L, 14L), 10L*(0:9)), "one data point")
-  times <- seq.Date(as.Date("2015-01-01"), as.Date("2015-01-01") + 28, by = 7)
-  period <- as.Date(c("2015-01-03", "2015-01-04"))
-  expect_error(GetPeriodIndices(period, times), "one data point")
-})
-
-test_that("GetPeriodIndices.HealthyInput", {
-  GetPeriodIndices <- CausalImpact:::GetPeriodIndices
-
-  # Test healthy input with integer time points
-  period <- c(101L, 200L)
-  times <- 1:200
-  result <- GetPeriodIndices(period, times)
-  expect_equal(result, period)
-  expect_true(is.integer(result))
-
-  # Integer time points not starting at 1
-  period <- c(101L, 200L)
-  times <- 51:200
-  result <- GetPeriodIndices(period, times)
-  expect_equal(result, c(51, 150))
-  expect_true(is.integer(result))
-
-  # Test healthy input with Date time points
-  period <- as.Date(c("2014-04-11", "2014-07-19"))  # 100 days
-  times <- seq.Date(as.Date("2014-01-01"), as.Date("2014-01-01") + 199, by = 1)
-  result <- GetPeriodIndices(period, times)
-  expect_equal(result, c(101, 200))
-  expect_true(is.integer(result))
-
-  # Test period consisting of one single time point, for integer time points
-  period <- c(21L, 21L)
-  times <- 11:30
-  result <- GetPeriodIndices(period, times)
-  expect_equal(result, c(11, 11))
-
-  # Test period consisting of one single time point, for Date time points
-  period <- as.Date(c("2014-01-10", "2014-01-10"))
-  times <- seq.Date(as.Date("2014-01-01"), as.Date("2014-01-31"), by = 1)
-  result <- GetPeriodIndices(period, times)
-  expect_equal(result, c(10, 10))
-
-  # Test period going beyond the range of <times>, for integer time points
-  expect_equal(GetPeriodIndices(c(1L, 20L), 11:30), c(1, 10))
-  expect_equal(GetPeriodIndices(c(21L, 40L), 11:30), c(11, 20))
-  expect_equal(GetPeriodIndices(c(1L, 40L), 11:30), c(1, 20))
-
-  # Test period going beyond the range of <times>, for Date time points
-  times <- seq.Date(as.Date("2015-03-11"), as.Date("2015-03-30"), by = 1)
-  expect_equal(GetPeriodIndices(as.Date(c("2015-03-01", "2015-03-20")), times),
-               c(1, 10))
-  expect_equal(GetPeriodIndices(as.Date(c("2015-03-21", "2015-04-01")), times),
-               c(11, 20))
-  expect_equal(GetPeriodIndices(as.Date(c("2015-03-01", "2015-04-01")), times),
-               c(1, 20))
 })
 
 test_that("CausalImpact.RunWithData.DataFormats", {

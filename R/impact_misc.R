@@ -1,4 +1,4 @@
-# Copyright 2014 Google Inc. All rights reserved.
+# Copyright 2014-2017 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -276,6 +276,39 @@ StandardizeAllVariables <- function(data) {
     UnStandardize <- tmp$UnStandardize
   }
   return(list(data = data, UnStandardize = UnStandardize))
+}
+
+GetPeriodIndices <- function(period, times) {
+  # Computes indices belonging to a period in data.
+  #
+  # Args:
+  #   period:  two-element vector specifying start and end of a period, having
+  #            the same data type as `times. The range from `period[1]` to
+  #            `period[2]` must have an intersect with `times`.
+  #   times:   vector of time points; can be of integer or of POSIXct type.
+  #
+  # Returns:
+  #   A two-element vector with the indices of the period start and end within
+  #   `times`.
+
+  # Check input
+  assert_that(length(period) == 2)
+  assert_that(!anyNA(times))
+  assert_that(identical(class(period), class(times)) ||
+              (is.numeric(period) && is.numeric(times)))
+  # Check if period boundaries are in the right order, and if `period` has an
+  # overlap with `times`.
+  assert_that(period[1] <= period[2])
+  assert_that(period[1] <= tail(times, 1), period[2] >= times[1])
+
+  # Look up values of start and end of period in `times`; also works if the
+  # period start and end time are not exactly present in the time series.
+  indices <- seq_along(times)
+  is.period <- (period[1] <= times) & (times <= period[2])
+  # Make sure the period does match any time points.
+  assert(any(is.period), "The period must cover at least one data point")
+  period.indices <- range(indices[is.period])
+  return(period.indices)
 }
 
 InferPeriodIndicesFromData <- function(y) {

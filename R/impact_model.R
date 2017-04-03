@@ -1,4 +1,4 @@
-# Copyright 2014 Google Inc. All rights reserved.
+# Copyright 2014-2017 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 # counterfactual predictions in a time series. Uses an MCMC algorithm
 # implemented in the \code{bsts} package to compute samples from the posterior
 # (smoothing) densities over states and parameters.
-#
-# TODO(kbrodersen) Rename this file to impact_model.R.
 #
 # Author: kbrodersen@google.com (Kay Brodersen)
 

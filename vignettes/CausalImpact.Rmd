@@ -8,6 +8,11 @@ output:
     toc_depth: 2
   pdf_document:
     toc: yes
+  rmarkdown::html_vignette:
+vignette: >
+  \VignetteIndexEntry{CausalImpact}
+  \VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 \
 
