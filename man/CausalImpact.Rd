@@ -256,7 +256,7 @@ plot(impact)    # Plot now has dates on the x axis.
 # For full flexibility, specify a custom model and pass the
 # fitted model to CausalImpact(). To run this example, run
 # the code for Example 1 first.
-
+\dontrun{}
 post.period.response <- y[post.period[1] : post.period[2]]
 y[post.period[1] : post.period[2]] <- NA
 ss <- AddLocalLevel(list(), y)
@@ -264,4 +264,5 @@ bsts.model <- bsts(y ~ x1, ss, niter = 1000)
 impact <- CausalImpact(bsts.model = bsts.model,
                        post.period.response = post.period.response)
 plot(impact)
+}
 }

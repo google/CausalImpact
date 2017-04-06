@@ -174,6 +174,14 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   return(cum.pred)
 }
 
+# Tell R CMD check to treat columns of data frames used in `dplyr::mutate` as
+# global variables; this avoids false positives of "no visible binding for
+# global variable ..." during the check.
+if(getRversion() >= "2.15.1") {
+  utils::globalVariables(c("AbsEffect", "AbsEffect.lower", "AbsEffect.upper",
+                           "AbsEffect.sd", "Pred"))
+}
+
 CompileSummaryTable <- function(y.post, y.samples.post,
                                 point.pred.mean.post, alpha = 0.05) {
   # Creates a table of statistics that summarise the post-intervention period.

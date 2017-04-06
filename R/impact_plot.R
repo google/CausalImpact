@@ -92,6 +92,13 @@ CreatePeriodMarkers <- function(pre.period, post.period, times) {
   return(markers)
 }
 
+# Tell R CMD check to treat columns of data frames used in `ggplot` functions
+# as global variables; this avoids false positives of "no visible binding for
+# global variable ..." during the check.
+if(getRversion() >= "2.15.1") {
+  utils::globalVariables(c("baseline", "lower", "response", "upper"))
+}
+
 CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
                                                  "cumulative")) {
   # Creates a plot of observed data and counterfactual predictions.
