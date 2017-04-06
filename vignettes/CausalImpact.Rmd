@@ -10,8 +10,8 @@ output:
     toc: yes
   rmarkdown::html_vignette:
 vignette: >
-  \VignetteIndexEntry{CausalImpact}
-  \VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{CausalImpact}
+  %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
 \
@@ -285,10 +285,10 @@ An R package for causal inference using Bayesian structural time-series models
 ```{r, include=FALSE}
 # Get authors and copyright information.
 description <- packageDescription("CausalImpact")
-authors.markdown <- paste(format(as.person(description$Author), 
+authors.markdown <- paste(format(as.person(description$Author),
                                  include = c("given", "family")),
                           sep = ", ")
-copyright.markdown <- gsub("\\(C\\)", "©", description$Copyright)
+copyright.markdown <- gsub("\\(C\\)", "\u00a9", description$Copyright)
 ```
 
 Version `r packageVersion("CausalImpact")`\

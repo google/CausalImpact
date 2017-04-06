@@ -20,6 +20,7 @@ library(CausalImpact)
 library(testthat)
 
 # Open graphics device and run tests
-png("/tmp/tmp.png")
+plot.file <- tempfile("CausalImpact", fileext = ".png")
+png(plot.file)
 testthat::test_check("CausalImpact")
 dev.off()
