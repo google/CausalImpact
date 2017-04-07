@@ -219,31 +219,28 @@
 # Example analysis on a simple artificial dataset
 # consisting of a response variable y and a
 # single covariate x1.
-
 set.seed(1)
-x1 <- 100 + arima.sim(model = list(ar = 0.999), n = 100)
-y <- 1.2 * x1 + rnorm(100)
-y[71:100] <- y[71:100] + 10
+x1 <- 100 + arima.sim(model = list(ar = 0.999), n = 52)
+y <- 1.2 * x1 + rnorm(52)
+y[41:52] <- y[41:52] + 10
 data <- cbind(y, x1)
-pre.period <- c(1, 70)
-post.period <- c(71, 100)
+pre.period <- c(1, 40)
+post.period <- c(41, 52)
 impact <- CausalImpact(data, pre.period, post.period)
 
 # Print and plot results
 summary(impact)
 summary(impact, "report")
 plot(impact)
-plot(impact, "original")
-plot(impact$model$bsts.model, "coefficients")
 
 # For further output, type:
 names(impact)
 
 # Example 2
 #
-# Daily time series: same data as in example 1, annotated
+# Weekly time series: same data as in example 1, annotated
 # with dates.
-times <- seq.Date(as.Date("2015-01-01"), by = 1, length.out = 100)
+times <- seq.Date(as.Date("2016-01-03"), by = 7, length.out = 52)
 data <- zoo(cbind(y, x1), times)
 
 impact <- CausalImpact(data, times[pre.period], times[post.period])
@@ -256,13 +253,11 @@ plot(impact)    # Plot now has dates on the x axis.
 # For full flexibility, specify a custom model and pass the
 # fitted model to CausalImpact(). To run this example, run
 # the code for Example 1 first.
-\dontrun{}
 post.period.response <- y[post.period[1] : post.period[2]]
 y[post.period[1] : post.period[2]] <- NA
 ss <- AddLocalLevel(list(), y)
-bsts.model <- bsts(y ~ x1, ss, niter = 1000)
+bsts.model <- bsts(y ~ x1, ss, niter = 100)
 impact <- CausalImpact(bsts.model = bsts.model,
                        post.period.response = post.period.response)
 plot(impact)
-}
 }
