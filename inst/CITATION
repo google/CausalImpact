@@ -1,14 +1,22 @@
-citHeader("To cite CausalImpact in publications use:")
+bibentry(
+    bibtype = "Article",
+    textVersion =
+        paste0("Brodersen et al., 2015, Annals of Applied Statistics. ",
+               "Inferring causal impact using Bayesian structural time-series ",
+               "models. http://research.google.com/pubs/pub41854.html"),
+    header = "To cite CausalImpact in publications use:",
 
-citEntry(entry = "Article",
-  title        = "Inferring causal impact using Bayesian structural time-series models",
-  author       = personList(as.person("Kay H. Brodersen"), as.person("Fabian Gallusser"), as.person("Jim Koehler"), as.person("Nicolas Remy"), as.person("Steven L. Scott")),
-  journal      = "Annals of Applied Statistics (in press)",
-  year         = "2014",
-  url          = "http://research.google.com/pubs/pub41854.html",
-
-  textVersion  =
-  paste("Brodersen et al., in press, Annals of Applied Statistics.",
-        "Inferring causal impact using Bayesian structural time-series models.",
-        "http://research.google.com/pubs/pub41854.html")
+    title = paste0("Inferring causal impact using {B}ayesian structural ",
+                   "time-series models"),
+    author = personList(
+        as.person("Kay H. Brodersen"),
+        as.person("Fabian Gallusser"),
+        as.person("Jim Koehler"),
+        as.person("Nicolas Remy"),
+        as.person("Steven L. Scott")),
+    journal = "Annals of Applied Statistics",
+    year = "2014",
+    volume = "9",
+    pages = "247--274",
+    url = "http://research.google.com/pubs/pub41854.html"
 )

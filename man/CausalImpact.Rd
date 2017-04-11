@@ -232,10 +232,13 @@ impact <- CausalImpact(data, pre.period, post.period)
 summary(impact)
 summary(impact, "report")
 plot(impact)
+plot(impact, "original")
+plot(impact$model$bsts.model, "coefficients")
 
 # For further output, type:
 names(impact)
 
+\dontrun{
 # Example 2
 #
 # Weekly time series: same data as in example 1, annotated
@@ -245,8 +248,8 @@ data <- zoo(cbind(y, x1), times)
 
 impact <- CausalImpact(data, times[pre.period], times[post.period])
 
-summary(impact) # Same as in example 1.
-plot(impact)    # Plot now has dates on the x axis.
+summary(impact)  # Same as in example 1.
+plot(impact)  # The plot now shows dates on the x-axis.
 
 # Example 3
 #
@@ -256,8 +259,9 @@ plot(impact)    # Plot now has dates on the x axis.
 post.period.response <- y[post.period[1] : post.period[2]]
 y[post.period[1] : post.period[2]] <- NA
 ss <- AddLocalLevel(list(), y)
-bsts.model <- bsts(y ~ x1, ss, niter = 100)
+bsts.model <- bsts(y ~ x1, ss, niter = 1000)
 impact <- CausalImpact(bsts.model = bsts.model,
                        post.period.response = post.period.response)
 plot(impact)
+}
 }

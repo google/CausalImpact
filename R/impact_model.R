@@ -143,6 +143,13 @@ FormatInputForConstructModel <- function(data, model.args) {
   return(list(data = data, model.args = model.args))
 }
 
+# Tell 'R CMD check' to treat `BstsOptions()` as global variable to avoid
+# false positives as long as 'bsts' version 0.7.x is not published.
+# TODO(alhauser): remove this when 'bsts' version 0.7.x is published.
+if(getRversion() >= "2.15.1") {
+  utils::globalVariables("BstsOptions")
+}
+
 ConstructModel <- function(data, model.args = NULL) {
   # Specifies the model and performs inference. Inference means using the data
   # to pass from a prior distribution over parameters and states to a posterior
@@ -192,21 +199,41 @@ ConstructModel <- function(data, model.args = NULL) {
 
   # No regression?
   if (ncol(data) == 1) {
-    bsts.model <- bsts(y, state.specification = ss, niter = model.args$niter,
-                       ping = 0, save.prediction.errors = TRUE, seed = 1)
-
+    # TODO(alhauser): remove this if-else-block, and add bsts version to the
+    # 'Depends' statement in the 'DESCRIPTION' file when bsts 0.7.x is
+    # published.
+    if (utils::packageVersion("bsts") < "0.7.0") {
+      bsts.model <- bsts(y, state.specification = ss, niter = model.args$niter,
+                         ping = 0, save.prediction.errors = TRUE, seed = 1)
+    } else {
+      bsts.model <- bsts(y, state.specification = ss, niter = model.args$niter,
+                         seed = 1, ping = 0,
+                         model.options =
+                             BstsOptions(save.prediction.errors = TRUE))
+    }
   } else {
     formula <- paste0(names(data)[1], " ~ .")
 
     # Static regression?
     if (!model.args$dynamic.regression) {
-      bsts.model <- bsts(formula, data = data, state.specification = ss,
-                         expected.model.size =
-                             kStaticRegressionExpectedModelSize,
-                         expected.r2 = kStaticRegressionExpectedR2,
-                         prior.df = kStaticRegressionPriorDf,
-                         save.prediction.errors = TRUE,
-                         niter = model.args$niter, seed = 1, ping = 0)
+      if (utils::packageVersion("bsts") < "0.7.0") {
+        bsts.model <- bsts(formula, data = data, state.specification = ss,
+                           expected.model.size =
+                               kStaticRegressionExpectedModelSize,
+                           expected.r2 = kStaticRegressionExpectedR2,
+                           prior.df = kStaticRegressionPriorDf,
+                           save.prediction.errors = TRUE,
+                           niter = model.args$niter, seed = 1, ping = 0)
+      } else {
+        bsts.model <- bsts(formula, data = data, state.specification = ss,
+                           expected.model.size =
+                               kStaticRegressionExpectedModelSize,
+                           expected.r2 = kStaticRegressionExpectedR2,
+                           prior.df = kStaticRegressionPriorDf,
+                           niter = model.args$niter, seed = 1, ping = 0,
+                           model.options =
+                               BstsOptions(save.prediction.errors = TRUE))
+      }
       time(bsts.model$original.series) <- time(data)
 
     # Dynamic regression?

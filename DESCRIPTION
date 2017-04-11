@@ -8,7 +8,7 @@ URL: https://google.github.io/CausalImpact/
 Description: Implements a Bayesian approach to causal impact estimation in time
   series, as described in Brodersen et al. (2015) <DOI:10.1214/14-AOAS788>.
   See the package documentation on GitHub
-  (https://google.github.io/CausalImpact/) to get started.
+  <https://google.github.io/CausalImpact/> to get started.
 Copyright: Copyright (C) 2014-2017 Google, Inc.
 Version: 1.2.0
 VignetteBuilder: knitr
