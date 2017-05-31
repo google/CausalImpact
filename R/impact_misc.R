@@ -437,6 +437,8 @@ PrettifyNumber <- function(x, letter = "", round.digits = 1L) {
       return(sprintf("%0.*fK", round.digits, x / 1e3))
     } else if (abs(x) >= 1) {
       return(sprintf("%0.*f", round.digits, x))
+    } else if (x == 0) {
+      return(sprintf("%0.*f", round.digits, x))  # because the log10 in the else makes first.nonzero to be Inf  
     } else {
       # Calculate position of first non-zero digit after the decimal point
       first.nonzero <- - floor(log10(abs(x)))
