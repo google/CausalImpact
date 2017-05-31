@@ -16,6 +16,7 @@ testthat::context("Unit tests for impact_misc.R")
 
 # Authors: kbrodersen@google.com (Kay Brodersen)
 #          gallusser@google.com (Fabian Gallusser)
+#          alhauser@google.com (Alain Hauser)
 
 CreateDummySeries <- function() {
   # Creates a dummy series for testing: 3 years of data, single variable.
@@ -170,18 +171,24 @@ test_that("ParseArguments", {
 test_that("Standardize", {
   Standardize <- CausalImpact:::Standardize
 
-  # Test missing input
-  expect_error(Standardize())
+  # Test that missing input throws an error.
+  expect_error(Standardize(), "missing")
+
+  # Test that an invalid fit range throws an error.
+  bad.fit.range <- list(c(1, NA_real_), 1, c(2, 1), c(-1, 1), c(1, 5))
+  invisible(lapply(bad.fit.range, function(fit.range) {
+    expect_error(Standardize(1 : 4, fit.range), "fit.range", fixed = TRUE)}))
 
   # Test the basics
   data <- c(-1, 0.1, 1, 2, NA, 3)
-  result <- Standardize(data)
+  result <- Standardize(data, c(1, 5))
   expect_true(is.list(result))
   expect_equal(names(result), c("y", "UnStandardize"))
   expect_equal(result$UnStandardize(result$y), data)
 
   # Test the maths
-  expect_equal(Standardize(c(1, 2, 3))$y, c(-1, 0, 1))
+  expect_equal(Standardize(1 : 3)$y, c(-1, 0, 1))
+  expect_equal(Standardize(1 : 5, c(1, 3))$y, c(-1, 0, 1, 2, 3))
 
   # Test that inputs are correctly recovered (including zoo input)
   test.data <- list(c(1), c(1, 1, 1), as.numeric(NA), c(1, NA, 3),
@@ -199,8 +206,15 @@ test_that("StandardizeAllVariables", {
   StandardizeAllVariables <- CausalImpact:::StandardizeAllVariables
   Standardize <- CausalImpact:::Standardize
 
-  # Test empty input
-  expect_error(StandardizeAllVariables())
+  # Test that missing input throws an error.
+  expect_error(StandardizeAllVariables(), "missing")
+
+  # Test that an invalid fit range throws an error.
+  data <- matrix(0, ncol = 3, nrow = 4)
+  bad.fit.range <- list(c(1, NA_real_), 1, c(2, 1), c(-1, 1), c(1, 5))
+  invisible(lapply(bad.fit.range, function(fit.range) {
+    expect_error(StandardizeAllVariables(data, fit.range), "fit.range",
+                 fixed = TRUE)}))
 
   # Test healthy input: several columns
   set.seed(1)
@@ -210,9 +224,18 @@ test_that("StandardizeAllVariables", {
   result <- StandardizeAllVariables(data)
   expect_equal(length(result), 2)
   expect_equal(names(result), c("data", "UnStandardize"))
-  sapply(1 : ncol(result$data), function(c) {
-    expect_equal(mean(result$data[, c]), 0, tolerance = 0.0001);
-    expect_equal(sd(result$data[, c]), 1, tolerance = 0.0001)
+  sapply(1 : ncol(result$data), function(column) {
+    expect_equal(mean(result$data[, column]), 0, tolerance = 0.0001);
+    expect_equal(sd(result$data[, column]), 1, tolerance = 0.0001)
+  })
+  expect_equal(result$UnStandardize, Standardize(data[, 1])$UnStandardize)
+
+  # Test that several columns are standardized correctly when fitting mean and
+  # SD only over part of the rows.
+  result <- StandardizeAllVariables(data, c(11, 90))
+  sapply(1 : ncol(result$data), function(column) {
+    expect_equal(mean(result$data[11 : 90, column]), 0, tolerance = 0.0001);
+    expect_equal(sd(result$data[11 : 90, column]), 1, tolerance = 0.0001)
   })
   expect_equal(result$UnStandardize, Standardize(data[, 1])$UnStandardize)
 
@@ -224,6 +247,13 @@ test_that("StandardizeAllVariables", {
   expect_equal(names(result), c("data", "UnStandardize"))
   expect_equal(mean(result$data), 0, tolerance = 0.0001)
   expect_equal(sd(result$data), 1, tolerance = 0.0001)
+  expect_equal(result$UnStandardize, Standardize(data)$UnStandardize)
+
+  # Test that a single series is standardized correctly when fitting mean and SD
+  # only over part of the data range.
+  result <- StandardizeAllVariables(data, c(11, 90))
+  expect_equal(mean(result$data[11: 90]), 0, tolerance = 0.0001)
+  expect_equal(sd(result$data[11 : 90]), 1, tolerance = 0.0001)
   expect_equal(result$UnStandardize, Standardize(data)$UnStandardize)
 })
 

@@ -10,9 +10,9 @@ Description: Implements a Bayesian approach to causal impact estimation in time
   See the package documentation on GitHub
   <https://google.github.io/CausalImpact/> to get started.
 Copyright: Copyright (C) 2014-2017 Google, Inc.
-Version: 1.2.0
+Version: 1.2.1
 VignetteBuilder: knitr
 License: Apache License 2.0 | file LICENSE
 Imports: assertthat, Boom, dplyr, ggplot2, zoo
-Depends: bsts
+Depends: bsts (>= 0.7.0)
 Suggests: knitr, testthat

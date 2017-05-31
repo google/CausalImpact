@@ -175,9 +175,10 @@
     yield more accurate inferences. Defaults to 1000.
 
     \item \code{standardize.data}. Whether to standardize all columns of
-    the data before fitting the model. This is equivalent to an empirical Bayes
-    approach to setting the priors. It ensures that results are invariant to
-    linear transformations of the data. Defaults to \code{TRUE}.
+    the data over the pre-intervention period before fitting the model. This is
+    equivalent to an empirical Bayes approach to setting the priors. It ensures
+    that results are invariant to linear transformations of the data. Defaults
+    to \code{TRUE}.
 
     \item \code{prior.level.sd}. Prior standard deviation of the Gaussian random
     walk of the local level, expressed in terms of data standard deviations.

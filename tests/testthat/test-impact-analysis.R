@@ -546,11 +546,13 @@ test_that("CausalImpact.RunWithData.LargeIntegerInput", {
   data <- cbind(as.integer(1e6 * y), as.integer(1e6 * x1))
   pre.period <- c(1, 70)
   post.period <- c(71, 100)
+  set.seed(42)
   expect_error(impact <- CausalImpact(data, pre.period, post.period), NA)
 
   # Rescales the time series to smaller values, refits the model and tests that
   # both model outcomes are identical (up to numerical imprecisions).
   rescaled.data <- data / 1e6
+  set.seed(42)
   rescaled.impact <- CausalImpact(rescaled.data, pre.period, post.period)
   original.summary <- impact$summary
   rescaled.summary <- rescaled.impact$summary

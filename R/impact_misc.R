@@ -16,6 +16,7 @@
 #
 # Authors: kbrodersen@google.com (Kay Brodersen)
 #          gallusser@google.com (Fabian Gallusser)
+#          alhauser@google.com (Alain Hauser)
 
 repmat <- function(X, m, n) {
   # R equivalent of repmat (MATLAB). Replicates a given vector or matrix.
@@ -213,31 +214,49 @@ ParseArguments <- function(args, defaults, allow.extra.args = FALSE) {
   return(args)
 }
 
-Standardize <- function(y) {
-  # Standardizes a vector \code{y} (to obtain mean 0 and SD 1). The original
-  # vector can be restored using \code{UnStandardize()}, which is a function
-  # that is supplied as part of the return value.
+Standardize <- function(y, fit.range = NULL) {
+  # Standardizes a vector \code{y}. The resulting vector is a linear
+  # transformation of the entire vector \code{y} which has mean 0 and standard
+  # deviation 1 over the range of indices specified by \code{fit.range}; i.e.
+  # the function transforms the entire vector, but uses only part of it to fit
+  # the moments. The original vector can be restored using
+  # \code{UnStandardize()}, which is a function that is supplied as part of the
+  # return value.
   #
   # Args:
-  #   y: numeric vector (may contain \code{NA} values)
+  #   y:         numeric vector (may contain \code{NA} values) to be
+  #              standardized
+  #   fit.range: vector with 2 entries specifying the first and last index
+  #              of the range of \code{y} used to fit the moments. If
+  #              \code{NULL}, the whole range of \code{y} is used.
   #
   # Returns:
   #   list of:
-  #     y: standardized version of the input
-  #     UnStandardize: function that restores the original data
+  #     y:             standardized input vector, i.e. linearly transformed
+  #                    input having mean 0 and SD 1 over the range of indices
+  #                    specified by \code{fit.range}.
+  #     UnStandardize: function that restores the original data.
   #
   # Examples:
   #   x <- c(1, 2, 3, 4, 5)
-  #   result <- CausalImpact:::Standardize(x)
+  #   result <- CausalImpact:::Standardize(x, c(1, 3))
   #   y <- result$UnStandardize(result$y)
   #   stopifnot(isTRUE(all.equal(x, y)))
 
   assert_that(is.null(dim(y)))
-  y.mu <- mean(y, na.rm = TRUE)
-  if (is.nan(y.mu)) {
-    y.mu <- as.numeric(NA)
+  if (!is.null(fit.range)) {
+    assert_that(is.numeric(fit.range), length(fit.range) == 2,
+                !anyNA(fit.range), !is.unsorted(c(1, fit.range, length(y))))
+  } else {
+    fit.range <- c(1, length(y))
   }
-  y.sd <- sd(y, na.rm = TRUE)
+
+  y.fit <- y[fit.range[1] : fit.range[2]]
+  y.mu <- mean(y.fit, na.rm = TRUE)
+  if (is.nan(y.mu)) {
+    y.mu <- NA_real_
+  }
+  y.sd <- sd(y.fit, na.rm = TRUE)
   y <- y - y.mu
   if (!is.na(y.sd) && (y.sd > 0)) {
     y <- y / y.sd
@@ -252,11 +271,16 @@ Standardize <- function(y) {
   return(list(y = y, UnStandardize = UnStandardize))
 }
 
-StandardizeAllVariables <- function(data) {
-  # Standardizes all columns of a given time series.
+StandardizeAllVariables <- function(data, fit.range = NULL) {
+  # Standardizes all columns of a given time series. While it transforms entire
+  # columns, it just uses the rows specified by \code{fit.range} to fit the
+  # moments (mean and standard deviation).
   #
   # Args:
-  #   data: data frame or zoo object with one or more columns
+  #   data:      data frame or zoo object with one or more columns
+  #   fit.range: vector with 2 entries specifying the first and last row
+  #              of the range of \code{data} used to fit the moments. If
+  #              \code{NULL}, all rows of \code{data} are used.
   #
   # Returns:
   #   list of:
@@ -266,12 +290,12 @@ StandardizeAllVariables <- function(data) {
 
   if (!is.null(ncol(data))) {
     for (j in ncol(data) : 1) {
-      tmp <- Standardize(data[, j])
+      tmp <- Standardize(data[, j], fit.range)
       data[, j] <- tmp$y
       UnStandardize <- tmp$UnStandardize
     }
   } else {
-    tmp <- Standardize(data)
+    tmp <- Standardize(data, fit.range)
     data <- tmp$y
     UnStandardize <- tmp$UnStandardize
   }

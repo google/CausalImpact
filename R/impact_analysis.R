@@ -293,7 +293,8 @@ CausalImpact <- function(data = NULL,
   #
   # Optional arguments for model.args:
   #   niter:              number of MCMC iterations
-  #   standardize.data:   whether to standardize the data before model fitting
+  #   standardize.data:   whether to standardize the data over the
+  #                       pre-intervention period before model fitting
   #   prior.level.sd:     standard deviation of the prior on the local level
   #   nseasons:           number of seasons in the seasonal component
   #   season.duration:    duration of each season
@@ -389,7 +390,8 @@ RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
   # Standardize all variables?
   UnStandardize <- identity
   if (model.args$standardize.data) {
-    sd.results <- StandardizeAllVariables(data.modeling)
+    fit.range <- c(1, diff(pre.period) + 1)
+    sd.results <- StandardizeAllVariables(data.modeling, fit.range)
     data.modeling <- sd.results$data
     UnStandardize <- sd.results$UnStandardize
   }
