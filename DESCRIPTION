@@ -1,6 +1,6 @@
 Package: CausalImpact
 Title: Inferring Causal Effects using Bayesian Structural Time-Series Models
-Date: 2017-04-06
+Date: 2017-05-31
 Author: Kay H. Brodersen <kbrodersen@google.com>,
   Alain Hauser <alhauser@google.com>
 Maintainer: Alain Hauser <alhauser@google.com>
