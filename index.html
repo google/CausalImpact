@@ -43,14 +43,15 @@
 <p>As with all approaches to causal inference on non-experimental data, valid conclusions require strong assumptions. The CausalImpact package, in particular, assumes that the outcome time series can be explained in terms of a set of control time series that were themselves not affected by the intervention. Furthermore, the relation between treated series and control series is assumed to be stable during the post-intervention period. Understanding and checking these assumptions for any given application is critical for obtaining valid conclusions.</p>
 
 
-<h4>
-<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h4>
+<h4><a name="installation" class="anchor" href="#installation">
+    <span class="octicon octicon-link"></span></a>Installation</h4>
 
-<div class="highlight highlight-R"><pre>install.packages<span class="p">(</span><span class="s">"devtools"</span><span class="p">)</span>
-<span class="kn">library</span><span class="p">(</span>devtools<span class="p">)</span>
-devtools<span class="o">::</span>install_github<span class="p">(</span><span class="s">"google/CausalImpact"</span><span class="p">)</span>
+<div class="highlight highlight-R">
+<pre>
+install.packages<span class="p">(</span><span class="s">"CausalImpact"</span><span class="p">)</span>
 <span class="kn">library</span><span class="p">(</span>CausalImpact<span class="p">)</span>
-</pre></div>
+</pre>
+</div>
 
 <h4>
 <a name="documentation-and-examples" class="anchor" href="#documentation-and-examples"><span class="octicon octicon-link"></span></a>Getting started</h4>
@@ -78,7 +79,13 @@ Publication:
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
       <footer class="inner">
-        <p class="copyright" style="font-size:90%">CausalImpact<br/> An R package for causal inference using Bayesian structural time-series models <br/> Author: Kay H. Brodersen <br/> Copyright © 2014-2016 Google, Inc.</p>
+        <p class="copyright" style="font-size:90%">
+          CausalImpact<br/>
+          An R package for causal inference using Bayesian structural
+          time-series models <br/>
+          Authors: Kay H. Brodersen, Alain Hauser <br/>
+          Copyright © 2014-2017 Google, Inc.
+        </p>
       </footer>
     </div>
 
