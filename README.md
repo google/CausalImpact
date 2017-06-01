@@ -22,7 +22,7 @@ conclusions.
 ## Installation
 
 ```r
-install.packes("CausalImpact")
+install.packages("CausalImpact")
 library(CausalImpact)
 ```
 
