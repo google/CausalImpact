@@ -37,4 +37,4 @@ library(CausalImpact)
 * Manuscript:
   [Brodersen et al., Annals of Applied Statistics (2015)](http://research.google.com/pubs/pub41854.html)
 * Discussion forum:
-  [StackExchange](http://stats.stackexchange.com/questions/tagged/causalimpact)
+  [Stackoverflow](http://stackoverflow.com/questions/tagged/causalimpact)
