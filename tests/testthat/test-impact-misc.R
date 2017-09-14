@@ -79,7 +79,7 @@ test_that("is.numerically.equal", {
   expect_error(is.numerically.equal("x", 3), "numeric")
   expect_error(is.numerically.equal(1, c(2, 3)), "scalar")
   expect_error(is.numerically.equal(1, 2, "tol"), "numeric")
-  expect_error(is.numerically.equal(1, 2, -1), "greater")
+  expect_error(is.numerically.equal(1, 2, -1), "tolerance")
 
   # Test valid input with two values being 'numerically equal' within the
   # specified tolerance.
@@ -241,8 +241,11 @@ test_that("GetPeriodIndices.InvalidInput", {
   # Test inconsistent period and times
   times <- seq.Date(as.Date("2014-01-01"), as.Date("2014-01-01") + 199, by = 1)
   period <- as.Date(c("2014-04-11", "2014-07-19"))  # 100 days
-  expect_error(GetPeriodIndices(c(101L, 200L), times), "class")
-  expect_error(GetPeriodIndices(period, 1:200), "class")
+  expect_error(GetPeriodIndices(c(101L, 200L), times))
+  expect_error(GetPeriodIndices(period, 1:200))
+  # TODO(alhauser): check for the content of the error message again once
+  # assertthat produces meaningful messages under R 3.5.0; currently the error
+  # message under R 3.5.0 says that the actual error message is invalid.
 
   # Test period that is completely outside the range of <times>:
   # - with integer time points
