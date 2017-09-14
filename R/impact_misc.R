@@ -18,32 +18,6 @@
 #          gallusser@google.com (Fabian Gallusser)
 #          alhauser@google.com (Alain Hauser)
 
-repmat <- function(X, m, n) {
-  # R equivalent of repmat (MATLAB). Replicates a given vector or matrix.
-  #
-  # Args:
-  #   X: vector or matrix
-  #   m: number of row replications
-  #   n: number of column replications
-  #
-  # Returns:
-  #   Matrix
-  #
-  # Examples:
-  #   CausalImpact:::repmat(c(10, 20), 1, 2)
-  #   #      [,1] [,2] [,3] [,4]
-  #   # [1,]   10   20   10   20
-
-  assert_that(is.vector(X) || is.matrix(X))
-  assert_that(is.count(m), is.count(n))
-  if (is.vector(X)) {
-    X <- t(as.matrix(X))
-  }
-  mx = dim(X)[1]
-  nx = dim(X)[2]
-  matrix(t(matrix(X, mx, nx * n)), mx * m, nx * n, byrow = TRUE)
-}
-
 is.wholenumber <- function(x, tolerance = .Machine$double.eps ^ 0.5) {
   # Checks whether a number is a whole number. This is not the same as
   # \code{is.integer()}, which tests the data type.
@@ -85,32 +59,6 @@ cumsum.na.rm <- function(x) {
   s <- cumsum(ifelse(is.na(x), 0, x))
   s[is.na(x)] <- NA
   return(s)
-}
-
-assert <- function(expr = TRUE, error = "") {
-  # Throws a custom error message if a condition is not fulfilled. This function
-  # is similar to `assertthat::assert_that()`. The main difference is that
-  # `assert()` allows for a custom error message, while the current CRAN
-  # version of the `assertthat` package (0.1) does not.
-  #
-  # Args:
-  #   expr:  expression that evaluates to a logical
-  #   error: error message if expression does not evaluate to \code{TRUE}
-  #
-  # Returns:
-  #   Returns quietly or fails with an error.
-  #
-  # Examples:
-  #   x <- 1
-  #   CausalImpact:::assert(x > 0)
-  #   CausalImpact:::assert(x > 0, "input argument must be positive")
-  #
-  # Documentation:
-  #   seealso: assert_that
-
-  if (!isTRUE(expr)) {
-    stop(error, call. = (error == ""))
-  }
 }
 
 is.numerically.equal <- function(x, y, tolerance = .Machine$double.eps ^ 0.5) {
@@ -205,9 +153,9 @@ ParseArguments <- function(args, defaults, allow.extra.args = FALSE) {
   # Are extra args allowed?
   if (!allow.extra.args) {
     illegal.args <- setdiff(names(args), names(defaults))
-    assert(length(illegal.args) == 0,
-           paste0("illegal extra args: '",
-                  paste(illegal.args, collapse = "', '"), "'"))
+    assert_that(length(illegal.args) == 0,
+                msg = paste0("illegal extra args: '",
+                             paste(illegal.args, collapse = "', '"), "'"))
   }
 
   # Return
@@ -330,7 +278,8 @@ GetPeriodIndices <- function(period, times) {
   indices <- seq_along(times)
   is.period <- (period[1] <= times) & (times <= period[2])
   # Make sure the period does match any time points.
-  assert(any(is.period), "The period must cover at least one data point")
+  assert_that(any(is.period),
+              msg = "The period must cover at least one data point")
   period.indices <- range(indices[is.period])
   return(period.indices)
 }
@@ -435,10 +384,8 @@ PrettifyNumber <- function(x, letter = "", round.digits = 1L) {
       return(sprintf("%0.*fM", round.digits, x / 1e6))
     } else if ((letter == "" && abs(x) >= 1e3) || letter == "K") {
       return(sprintf("%0.*fK", round.digits, x / 1e3))
-    } else if (abs(x) >= 1) {
+    } else if (abs(x) >= 1 || x == 0) {
       return(sprintf("%0.*f", round.digits, x))
-    } else if (x == 0) {
-      return(sprintf("%0.*f", round.digits, x))  
     } else {
       # Calculate position of first non-zero digit after the decimal point
       first.nonzero <- - floor(log10(abs(x)))

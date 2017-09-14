@@ -93,7 +93,7 @@ FormatInputForConstructModel <- function(data, model.args) {
 
   # Check covariates
   if (ncol(data) >= 2) {
-    assert(all(!is.na(data[, -1])), "covariates must not be NA")
+    assert_that(all(!is.na(data[, -1])), msg = "covariates must not be NA")
   }
 
   # (Re-)parse <model.args>, fill gaps using <.defaults>
@@ -107,8 +107,9 @@ FormatInputForConstructModel <- function(data, model.args) {
   assert_that(!is.na(model.args$niter))
   assert_that(is.wholenumber(model.args$niter))
   model.args$niter <- round(model.args$niter)
-  assert(model.args$niter >= 10,
-         "must draw, at the very least, 10 MCMC samples; recommending 1000")
+  assert_that(model.args$niter >= 10,
+              msg = paste0("must draw, at the very least, 10 MCMC samples; ",
+                           "recommending 1000"))
   if (model.args$niter < 1000) {
     warning("Results potentially inaccurate. Consider using more MCMC samples.")
   }
@@ -124,8 +125,9 @@ FormatInputForConstructModel <- function(data, model.args) {
   assert_that(is.numeric(model.args$nseasons))
   assert_that(!is.na(model.args$nseasons))
   assert_that(is.wholenumber(model.args$nseasons))
-  assert(model.args$nseasons >= 1,
-         "nseasons cannot be 0; use 1 in order not to have seaonsal components")
+  assert_that(model.args$nseasons >= 1,
+              msg = paste0("nseasons cannot be 0; use 1 in order not to have ",
+                           "seaonsal components"))
 
   # Check <season.duration>
   assert_that(is.scalar(model.args$season.duration))

@@ -27,8 +27,8 @@ CreateDataFrameForPlot <- function(impact) {
 
   # Check input
   assert_that((class(impact) == "CausalImpact"))
-  assert(!isTRUE(all(is.na(impact$series[, -c(1, 2)]))),
-         "inference was aborted; cannot create plot")
+  assert_that(!isTRUE(all(is.na(impact$series[, -c(1, 2)]))),
+              msg = "inference was aborted; cannot create plot")
 
   # Create data frame from zoo series
   data <- as.data.frame(impact$series)

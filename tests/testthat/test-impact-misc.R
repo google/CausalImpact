@@ -32,27 +32,6 @@ CreateDummySeries <- function() {
   return(data)
 }
 
-test_that("repmat", {
-  repmat <- CausalImpact:::repmat
-
-  # Test empty input
-  expect_error(repmat())
-
-  # Test various standard cases
-  expect_error(repmat(data.frame(x = c(1, 2, 3)), 1, 1))
-  expect_error(repmat(1, c(1, 2), 1))
-  expect_error(repmat(1, 1, c(1, 2)))
-  expect_equal(repmat(1, 1, 1), as.matrix(1))
-  expect_equal(repmat(1, 2, 1), rbind(1, 1))
-  expect_equal(repmat(1, 1, 2), t(c(1, 1)))
-  expect_equal(repmat(c(1, 2), 2, 1), rbind(c(1, 2), c(1, 2)))
-  expect_equal(repmat("a", 1, 2), as.matrix(t(c("a", "a"))))
-  expect_equal(repmat(NA, 1, 2), as.matrix(t(c(NA, NA))))
-
-  # Test documentation example
-  expect_equal(repmat(c(10, 20), 1, 2), as.matrix(t(c(10, 20, 10, 20))))
-})
-
 test_that("is.wholenumber", {
   is.wholenumber <- CausalImpact:::is.wholenumber
 
@@ -90,26 +69,6 @@ test_that("cumsum.na.rm", {
   expect_equal(cumsum.na.rm(c(NA, NA, NA)), as.numeric(c(NA, NA, NA)))
   expect_equal(cumsum.na.rm(c(NA, NA)), as.numeric(c(NA, NA)))
   expect_equal(cumsum.na.rm(c(0, NA, NA, 0)), c(0, NA, NA, 0))
-})
-
-test_that("assert", {
-  assert <- CausalImpact:::assert
-
-  # Test healthy input.
-  expect_error(assert(), NA)
-  expect_error(assert(TRUE), NA)
-  expect_error(assert(TRUE, "foo"), NA)
-  expect_error(assert(3 < 5), NA)
-  expect_error(assert(FALSE))
-  expect_error(assert(FALSE, "foo"), "foo")
-  expect_error(assert(3 > 5), "")
-  expect_error(assert(3 > 5, "3 is not greater than 5"), "greater")
-
-  # Test that non-logical input produces an error.
-  bad.expr <- list(NA, 4, "test", expression(3 < 5), data.frame(x = 3, y = 5))
-  invisible(lapply(bad.expr, function(expr) {
-    expect_error(assert(expr, "test"), "test")
-  }))
 })
 
 test_that("is.numerically.equal", {
@@ -218,9 +177,9 @@ test_that("StandardizeAllVariables", {
 
   # Test healthy input: several columns
   set.seed(1)
-  data <- zoo(cbind(rnorm(100) * 100 + 1000,
-                    rnorm(100) * 200 + 2000,
-                    rnorm(100) * 300 + 3000))
+  data <- zoo(cbind(rnorm(100, mean = 1000, sd = 100),
+                    rnorm(100, mean = 2000, sd = 200),
+                    rnorm(100, mean = 3000, sd = 300)))
   result <- StandardizeAllVariables(data)
   expect_equal(length(result), 2)
   expect_equal(names(result), c("data", "UnStandardize"))
@@ -404,8 +363,8 @@ test_that("PrettifyNumber", {
   # Test standard precision
   expect_equal(PrettifyNumber(123.456), "123.5")
   expect_equal(PrettifyNumber(123.456, letter = "K"), "0.1K")
-  input <- c(0.01, 0.0123, 1, -123, 12345, -1234567, 1982345670)
-  output <- c("0.01", "0.01", "1.0", "-123.0", "12.3K", "-1.2M", "2.0B")
+  input <- c(0, 0.01, 0.0123, 1, -123, 12345, -1234567, 1982345670)
+  output <- c("0.0", "0.01", "0.01", "1.0", "-123.0", "12.3K", "-1.2M", "2.0B")
   expect_equal(PrettifyNumber(input), output)
 
   # Test documentation examples
@@ -418,6 +377,7 @@ test_that("PrettifyNumber", {
   expect_equal(PrettifyNumber(0.01, round.digits = 1), "0.01")
   expect_equal(PrettifyNumber(-0.0123, round.digits = 2), "-0.012")
   expect_equal(PrettifyNumber(123456, round.digits = 2), "123.46K")
+  expect_equal(PrettifyNumber(0, round.digits = 2), "0.00")
 
   # Test numbers with trailing zeros
   expect_equal(PrettifyNumber(0.2, round.digits = 2), "0.20")

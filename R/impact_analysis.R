@@ -105,16 +105,16 @@ FormatInputPrePostPeriod <- function(pre.period, post.period, data) {
   assert_that(!is.null(post.period))
   assert_that(length(pre.period) == 2, length(post.period) == 2)
   assert_that(!anyNA(pre.period), !anyNA(post.period))
-  assert(isTRUE(all.equal(class(time(data)), class(pre.period))) ||
-         (is.numeric(time(data)) && is.numeric(pre.period)),
-         error = paste0("pre.period (", class(pre.period)[1], ") ",
-                        "must have the same class as the time points in the ",
-                        "data (", class(time(data))[1], ")"))
-  assert(isTRUE(all.equal(class(time(data)), class(post.period))) ||
-         (is.numeric(time(data)) && is.numeric(post.period)),
-         error = paste0("post.period (", class(post.period)[1], ") ",
-                        "must have the same class as the time points in the ",
-                        "data (", class(time(data))[1], ")"))
+  assert_that(isTRUE(all.equal(class(time(data)), class(pre.period))) ||
+                (is.numeric(time(data)) && is.numeric(pre.period)),
+              msg = paste0("pre.period (", class(pre.period)[1], ") ",
+                           "must have the same class as the time points in ",
+                           "the data (", class(time(data))[1], ")"))
+  assert_that(isTRUE(all.equal(class(time(data)), class(post.period))) ||
+                (is.numeric(time(data)) && is.numeric(post.period)),
+              msg = paste0("post.period (", class(post.period)[1], ") ",
+                           "must have the same class as the time points in ",
+                           "the data (", class(time(data))[1], ")"))
   if (pre.period[1] < start(data)) {
     warning(paste0("Setting pre.period[1] to start of data: ", start(data)))
   }
@@ -128,8 +128,8 @@ FormatInputPrePostPeriod <- function(pre.period, post.period, data) {
   period.indices <- list(
       pre.period = GetPeriodIndices(pre.period, time(data)),
       post.period = GetPeriodIndices(post.period, time(data)))
-  assert(diff(period.indices$pre.period) >= 2,
-         "pre.period must span at least 3 time points")
+  assert_that(diff(period.indices$pre.period) >= 2,
+              msg = "pre.period must span at least 3 time points")
   assert_that(period.indices$post.period[1] > period.indices$pre.period[2])
 
   return(period.indices)
@@ -154,12 +154,13 @@ FormatInputForCausalImpact <- function(data, pre.period, post.period,
   #   list of checked (and possibly reformatted) input arguments
 
   # Check that a consistent set of variables has been provided
-  assert(xor(!is.null(data) && !is.null(pre.period) && !is.null(post.period) &&
-             is.null(bsts.model) && is.null(post.period.response),
-             is.null(data) && is.null(pre.period) && is.null(post.period) &&
-             !is.null(bsts.model) && !is.null(post.period.response)),
-         paste0("must either provide data, pre.period, post.period, model.args",
-                "; or bsts.model and post.period.response"))
+  assert_that(
+      xor(!is.null(data) && !is.null(pre.period) && !is.null(post.period) &&
+            is.null(bsts.model) && is.null(post.period.response),
+          is.null(data) && is.null(pre.period) && is.null(post.period) &&
+            !is.null(bsts.model) && !is.null(post.period.response)),
+      msg = paste0("must either provide data, pre.period, post.period, ",
+                   "model.args; or bsts.model and post.period.response"))
 
   # Check <data> and convert to zoo, with rows representing time points
   if (!is.null(data)) {
@@ -505,8 +506,8 @@ PrintSummary <- function(impact, digits = 2L) {
   assert_that(class(impact) == "CausalImpact")
   summary <- impact$summary
   alpha <- impact$model$alpha
-  assert(!is.null(alpha) && alpha > 0,
-         "invalid <alpha>; <impact> must be a CausalImpact object")
+  assert_that(!is.null(alpha) && alpha > 0,
+              msg = "invalid <alpha>; <impact> must be a CausalImpact object")
 
   # Print title
   cat("Posterior inference {CausalImpact}\n")

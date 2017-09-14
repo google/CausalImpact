@@ -85,8 +85,8 @@ ComputePointPredictions <- function(y.samples, state.samples, alpha = 0.05) {
   #     point.pred.upper: upper limit
 
   # Expectation of data = expectation of state (because noise is centered)
-  assert(identical(dim(y.samples), dim(state.samples)),
-         "inconsistent y.samples, state.samples")
+  assert_that(identical(dim(y.samples), dim(state.samples)),
+              msg = "inconsistent y.samples, state.samples")
   point.pred.mean <- colMeans(state.samples) # e.g., 365
 
   # Quantiles of the data = Quantiles of (state + observation noise)
@@ -145,9 +145,9 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   cum.pred.mean <- c(cum.pred.mean.pre, cum.pred.mean.post)
 
   # Check for overflow
-  assert(identical(which(is.na(cum.pred.mean)),
-                   which(is.na(y[1:(post.period.begin - 1)]))),
-         "unexpected NA found in cum.pred.mean")
+  assert_that(identical(which(is.na(cum.pred.mean)),
+                        which(is.na(y[1:(post.period.begin - 1)]))),
+              msg = "unexpected NA found in cum.pred.mean")
 
   # Compute posterior interval
   cum.pred.lower.pre <- cum.pred.mean.pre
@@ -207,13 +207,15 @@ CompileSummaryTable <- function(y.post, y.samples.post,
   #   data frame of post-period summary statistics
 
   # Check input
-  assert(ncol(y.samples.post) == length(y.post), "inconsistent y.post")
-  assert(length(point.pred.mean.post) == length(y.post), "inconsistent y.post")
+  assert_that(ncol(y.samples.post) == length(y.post),
+              msg = "inconsistent y.post")
+  assert_that(length(point.pred.mean.post) == length(y.post),
+              msg = "inconsistent y.post")
 
   # We will compare the matrix of predicted trajectories (e.g., 900 x 201)
   # with a matrix of replicated observations (e.g., 900 x 201)
-  n.samples <- nrow(y.samples.post)
-  y.repmat.post <- repmat(y.post, n.samples, 1)
+  y.repmat.post <- matrix(y.post, nrow = nrow(y.samples.post),
+                          ncol = length(y.post), byrow = TRUE)
   assert_that(all(dim(y.repmat.post) == dim(y.samples.post)))
 
   # Define quantiles
@@ -419,13 +421,14 @@ AssertCumulativePredictionsAreConsistent <- function(cum.pred, post.period,
     non.na.indices <- which(!is.na(cum.pred.col[1:(post.period[1] - 1)]))
     assert_that(length(non.na.indices) > 0)
     last.non.na.index <- max(non.na.indices)
-    assert(is.numerically.equal(cum.pred.col[post.period[2]] -
-                                cum.pred.col[last.non.na.index],
-                                summary.entry[2]),
-           paste0("The calculated ", description, " of the cumulative effect ",
-                  "is inconsistent with the previously calculated one. You ",
-                  "might try to run CausalImpact on a shorter time series ",
-                  "to avoid this problem."))
+    assert_that(
+        is.numerically.equal(cum.pred.col[post.period[2]] -
+                               cum.pred.col[last.non.na.index],
+                             summary.entry[2]),
+        msg = paste0("The calculated ", description, " of the cumulative ",
+                     "effect is inconsistent with the previously calculated ",
+                     "one. You might try to run CausalImpact on a shorter ",
+                     "time series to avoid this problem."))
   }
 
   AssertCumulativePredictionIsConsistent(cum.pred$cum.pred, summary$Pred,
@@ -474,11 +477,12 @@ CheckInputForCompilePosteriorInferences <- function(bsts.model, y.cf,
   y.cf <- as.vector(y.cf)
   assert_that(is.numeric(y.cf))
   assert_that(length(y.cf) >= 1)
-  assert(!anyNA(y.cf[(post.period[1] : post.period[2]) - cf.period.start + 1]),
-         "NA values in the post-period not currently supported")
-  assert(all(is.na(tail(bsts.model$original.series, length(y.cf)))),
-         paste0("bsts.model$original.series must end on a stretch of NA ",
-                "at least as long as y.cf"))
+  assert_that(!anyNA(y.cf[(post.period[1] : post.period[2]) -
+                            cf.period.start + 1]),
+              msg = "NA values in the post-period not currently supported")
+  assert_that(all(is.na(tail(bsts.model$original.series, length(y.cf)))),
+              msg = paste0("bsts.model$original.series must end on a stretch ",
+                           "of NA at least as long as y.cf"))
 
   # Check <alpha>
   assert_that(is.numeric(alpha))

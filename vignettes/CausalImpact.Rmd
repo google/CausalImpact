@@ -246,10 +246,11 @@ impact <- CausalImpact(..., model.args = list(niter = 5000, nseasons = 7))
 *   `niter` Number of MCMC samples to draw. More samples lead to more accurate
     inferences. Defaults to __1000__.
 
-*   `standardize.data` Whether to standardize all columns of the data before
-    fitting the model. This is equivalent to an empirical Bayes approach to
-    setting the priors. It ensures that results are invariant to linear
-    transformations of the data. Defaults to __TRUE__.
+*   `standardize.data` Whether to standardize all columns of the data using
+    moments estimated from the pre-intervention period before fitting the model.
+    This is equivalent to an empirical Bayes approach to setting the priors. It
+    ensures that results are invariant to linear transformations of the data.
+    Defaults to __TRUE__.
 
 *   `prior.level.sd` Prior standard deviation of the Gaussian random walk of the
     local level. Expressed in terms of data standard deviations. Defaults to
