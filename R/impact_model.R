@@ -48,7 +48,7 @@ ObservationsAreIllConditioned <- function(y) {
     ill.conditioned <- TRUE
 
   # Fewer than 3 non-NA values?
-  } else if (length(y[!is.na(y)]) < 3) {
+  } else if (sum(! is.na(y)) < 3) {
     warning("Aborting inference due to fewer than 3 non-NA values in input")
     ill.conditioned <- TRUE
 

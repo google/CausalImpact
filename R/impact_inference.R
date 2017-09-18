@@ -30,7 +30,7 @@ GetPosteriorStateSamples <- function(bsts.model) {
   # discarding burn-in samples (=> 900 x 2 x 365)
   burn <- SuggestBurn(0.1, bsts.model)
   assert_that(burn > 0)
-  state.contributions <- bsts.model$state.contributions[-(1 : burn), , ,
+  state.contributions <- bsts.model$state.contributions[-seq_len(burn), , ,
                                                         drop = FALSE]
 
   # Sum across states, call it 'state.samples' (=> 900 x 365)
@@ -57,7 +57,7 @@ ComputeResponseTrajectories <- function(bsts.model) {
   # Get observation noise standard deviation samples
   burn <- SuggestBurn(0.1, bsts.model)
   assert_that(burn > 0)
-  sigma.obs <- bsts.model$sigma.obs[-(1 : burn)]  # e.g., 900
+  sigma.obs <- bsts.model$sigma.obs[-seq_len(burn)]  # e.g., 900
 
   # Sample from the posterior predictive density over data
   n.samples <- dim(state.samples)[1]  # e.g., 900 x 365
@@ -135,9 +135,9 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   # post-period.
 
   # Compute posterior mean
-  is.post.period <- (1 : length(y)) >= post.period.begin
-  cum.pred.mean.pre <- cumsum.na.rm(as.vector(y)[1 : (post.period.begin - 1)])
-  non.na.indices <- which(!is.na(cum.pred.mean.pre[1:(post.period.begin - 1)]))
+  is.post.period <- (seq_along(y)) >= post.period.begin
+  cum.pred.mean.pre <- cumsum.na.rm(as.vector(y)[seq_len(post.period.begin - 1)])
+  non.na.indices <- which(!is.na(cum.pred.mean.pre[seq_len(post.period.begin - 1)]))
   assert_that(length(non.na.indices) > 0)
   last.non.na.index <- max(non.na.indices)
   cum.pred.mean.post <- cumsum(point.pred$point.pred[is.post.period]) +
@@ -145,8 +145,8 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   cum.pred.mean <- c(cum.pred.mean.pre, cum.pred.mean.post)
 
   # Check for overflow
-  assert_that(identical(which(is.na(cum.pred.mean)),
-                        which(is.na(y[1:(post.period.begin - 1)]))),
+  assert_that(identical(is.na(cum.pred.mean),
+                        is.na(y[seq_len(post.period.begin - 1)])),
               msg = "unexpected NA found in cum.pred.mean")
 
   # Compute posterior interval
@@ -172,14 +172,6 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   cum.pred <- data.frame(cum.pred = cum.pred.mean,
                          cum.pred.lower, cum.pred.upper)
   return(cum.pred)
-}
-
-# Tell R CMD check to treat columns of data frames used in `dplyr::mutate` as
-# global variables; this avoids false positives of "no visible binding for
-# global variable ..." during the check.
-if(getRversion() >= "2.15.1") {
-  utils::globalVariables(c("AbsEffect", "AbsEffect.lower", "AbsEffect.upper",
-                           "AbsEffect.sd", "Pred"))
 }
 
 CompileSummaryTable <- function(y.post, y.samples.post,
@@ -245,10 +237,11 @@ CompileSummaryTable <- function(y.post, y.samples.post,
                                    prob.upper)),
       AbsEffect.sd = c(sd(rowMeans(y.repmat.post - y.samples.post)),
                        sd(rowSums(y.repmat.post - y.samples.post))))
-  summary <- dplyr::mutate(summary, RelEffect = AbsEffect / Pred,
-                           RelEffect.lower = AbsEffect.lower / Pred,
-                           RelEffect.upper = AbsEffect.upper / Pred,
-                           RelEffect.sd = AbsEffect.sd / Pred)
+  summary <- dplyr::mutate(summary,
+                           RelEffect = UQ(quo(AbsEffect / Pred)),
+                           RelEffect.lower = UQ(quo(AbsEffect.lower / Pred)),
+                           RelEffect.upper = UQ(quo(AbsEffect.upper / Pred)),
+                           RelEffect.sd = UQ(quo(AbsEffect.sd / Pred)))
   rownames(summary) <- c("Average", "Cumulative")
 
   # Add interval coverage, defined by alpha
@@ -418,7 +411,7 @@ AssertCumulativePredictionsAreConsistent <- function(cum.pred, post.period,
   AssertCumulativePredictionIsConsistent <- function(cum.pred.col,
                                                      summary.entry,
                                                      description) {
-    non.na.indices <- which(!is.na(cum.pred.col[1:(post.period[1] - 1)]))
+    non.na.indices <- which(!is.na(cum.pred.col[seq_len(post.period[1] - 1)]))
     assert_that(length(non.na.indices) > 0)
     last.non.na.index <- max(non.na.indices)
     assert_that(
@@ -611,7 +604,7 @@ CompileNaInferences <- function(y.model) {
             "cum.pred", "cum.pred.lower", "cum.pred.upper",
             "point.effect", "point.effect.lower", "point.effect.upper",
             "cum.effect", "cum.effect.lower", "cum.effect.upper")
-  na.series <- matrix(as.numeric(NA), nrow = length(y.model), ncol = 12)
+  na.series <- matrix(NA_real_, nrow = length(y.model), ncol = 12)
   na.series <- zoo(na.series, time(y.model))
   names(na.series) <- vars
 

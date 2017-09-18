@@ -36,18 +36,18 @@ CreateDataFrameForPlot <- function(impact) {
 
   # Reshape data frame
   tmp1 <- data[, c("time", "response", "point.pred", "point.pred.lower",
-                   "point.pred.upper")]
+                   "point.pred.upper"), drop = FALSE]
   names(tmp1) <- c("time", "response", "mean", "lower", "upper")
   tmp1$baseline <- NA
   tmp1$metric <- "original"
   tmp2 <- data[, c("time", "response", "point.effect", "point.effect.lower",
-                   "point.effect.upper")]
+                   "point.effect.upper"), drop = FALSE]
   names(tmp2) <- c("time", "response", "mean", "lower", "upper")
   tmp2$baseline <- 0
   tmp2$metric <- "pointwise"
   tmp2$response <- NA
   tmp3 <- data[, c("time", "response", "cum.effect", "cum.effect.lower",
-                   "cum.effect.upper")]
+                   "cum.effect.upper"), drop = FALSE]
   names(tmp3) <- c("time", "response", "mean", "lower", "upper")
   tmp3$metric <- "cumulative"
   tmp3$baseline <- 0
@@ -118,7 +118,7 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
   # Select metrics to display (and their order)
   assert_that(is.vector(metrics))
   metrics <- match.arg(metrics, several.ok = TRUE)
-  data <- data[data$metric %in% metrics, ]
+  data <- data[data$metric %in% metrics, , drop = FALSE]
   data$metric <- factor(data$metric, metrics)
 
   # Initialize plot
