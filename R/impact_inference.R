@@ -174,6 +174,14 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   return(cum.pred)
 }
 
+# Tell R CMD check to treat columns of data frames used in `dplyr::mutate` as
+# global variables; this avoids false positives of "no visible binding for
+# global variable ..." during the check.
+if(getRversion() >= "2.15.1") {
+  utils::globalVariables(c("AbsEffect", "AbsEffect.lower", "AbsEffect.upper",
+                           "AbsEffect.sd", "Pred"))
+}
+
 CompileSummaryTable <- function(y.post, y.samples.post,
                                 point.pred.mean.post, alpha = 0.05) {
   # Creates a table of statistics that summarise the post-intervention period.
@@ -238,10 +246,10 @@ CompileSummaryTable <- function(y.post, y.samples.post,
       AbsEffect.sd = c(sd(rowMeans(y.repmat.post - y.samples.post)),
                        sd(rowSums(y.repmat.post - y.samples.post))))
   summary <- dplyr::mutate(summary,
-                           RelEffect = UQ(quo(AbsEffect / Pred)),
-                           RelEffect.lower = UQ(quo(AbsEffect.lower / Pred)),
-                           RelEffect.upper = UQ(quo(AbsEffect.upper / Pred)),
-                           RelEffect.sd = UQ(quo(AbsEffect.sd / Pred)))
+                           RelEffect = AbsEffect / Pred,
+                           RelEffect.lower = AbsEffect.lower / Pred,
+                           RelEffect.upper = AbsEffect.upper / Pred,
+                           RelEffect.sd = AbsEffect.sd / Pred)
   rownames(summary) <- c("Average", "Cumulative")
 
   # Add interval coverage, defined by alpha
