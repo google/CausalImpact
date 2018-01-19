@@ -13,7 +13,7 @@ Copyright: Copyright (C) 2014-2017 Google, Inc.
 Version: 1.2.4
 VignetteBuilder: knitr
 License: Apache License 2.0 | file LICENSE
-Imports: assertthat (>= 0.2.0), Boom, dplyr, ggplot2, zoo
+Imports: assertthat (>= 0.2.0), Boom, dplyr (>= 0.7.0), ggplot2, zoo
 Depends: bsts (>= 0.7.0)
 Suggests: knitr, testthat
 
