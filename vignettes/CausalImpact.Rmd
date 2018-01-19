@@ -405,6 +405,15 @@ using:
 ```{r, eval=FALSE}
 plot(impact$model$bsts.model, "coefficients")
 ```
+The size of the bars in the plot depict the inclusion probabilities of the
+model coefficients. The bars are shaded by the conditional probability that a
+coefficient is positive, given that it is nonzero (white means the coefficient
+is negative, black means the coefficient is positive, grey means the coefficient
+has the same probability of being negative or positive). For more information on
+the plot, see
+```{r, eval=FALSE}
+?BoomSpikeSlab::PlotMarginalInclusionProbabilities
+```
 
 ## 10. Further resources
 
