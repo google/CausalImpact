@@ -388,7 +388,7 @@ test_that("CausalImpact.RunWithData.PreAndPostPeriod", {
   model.args <- list(niter = 100)
   suppressWarnings(impact <- CausalImpact(data, pre.period, post.period,
                                           model.args))
-  expect_equal(time(impact$model$bsts.model$original.series), time(data)[11:50])
+  expect_equal(time(impact$model$bsts.model$original.series), 11:50)
   # Test that only pre-period is used for model fitting
   expect_true(all(is.na(impact$model$bsts.model$original.series[11:40])))
   expect_equal(impact$series$response, zoo(data))
@@ -502,7 +502,7 @@ test_that("CausalImpact.RunWithData.ShortTimeSeries", {
   model.args <- list(niter = 100)
   suppressWarnings(impact <- CausalImpact(data, pre.period, post.period,
                                           model.args))
-  expect_equal(time(impact$model$bsts.model$original.series), time(data))
+  expect_equal(time(impact$model$bsts.model$original.series), 1:200)
   expect_equal(time(impact$series), time(data))
   CallAllS3Methods(impact)
 
@@ -567,6 +567,25 @@ test_that("CausalImpact.RunWithData.LargeIntegerInput", {
   expect_equal(original.summary[, unscaled.columns],
                rescaled.summary[, unscaled.columns],
                tolerance = 0.01)
+})
+
+test_that("CausalImpact.RunWithData.MissingTimePoint", {
+  set.seed(1)
+  series <- zoo(data.frame(y = rnorm(20), x = rnorm(20)),
+                seq.Date(as.Date("2017-01-01"), by = 1, length.out = 20))
+  pre.period <- as.Date(c("2017-01-01", "2017-01-15"))
+  post.period <- as.Date(c("2017-01-16", "2017-01-20"))
+  model.args <- list(niter = 100)
+
+  # Missing in pre-period
+  impact <- CausalImpact(series[-10, ], pre.period, post.period, model.args)
+  indices <- time(impact$series)
+  expect_equal(indices, time(series)[-10])
+
+  # Missing in post-period
+  impact <- CausalImpact(series[-17, ], pre.period, post.period, model.args)
+  indices <- time(impact$series)
+  expect_equal(indices, time(series)[-17])
 })
 
 test_that("CausalImpact.RunWithBstsModel", {
