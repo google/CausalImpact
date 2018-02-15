@@ -56,8 +56,9 @@ cumsum.na.rm <- function(x) {
   if (is.null(x)) {
     return(x)
   }
-  s <- cumsum(ifelse(is.na(x), 0, x))
-  s[is.na(x)] <- NA
+  nas <- is.na(x)
+  s <- cumsum(ifelse(nas, 0, x))
+  s[nas] <- NA
   return(s)
 }
 
