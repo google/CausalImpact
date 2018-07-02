@@ -209,6 +209,13 @@
     coefficients. In combination with a time-varying local trend or even a
     time-varying local level, this often leads to overspecification, in which
     case a static regression is safer. Defaults to \code{FALSE}.
+
+    \item \code{max.flips}. By default, each iteration tries to flip each
+    predictor in or out of the model.  Setting \code{max.flips} tells the
+    algorithm to randomly choose that many variables to explore flipping. Useful
+    to set (e.g. 100) when you have a large number of controls (e.g. 10000); in
+    such cases, a lower \code{max.flips} can speed up computation. Defaults to
+    -1.
   }
 }
 \author{

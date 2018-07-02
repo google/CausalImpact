@@ -54,13 +54,14 @@ test_that("FormatInputForConstructModel", {
                      prior.level.sd = 0.01,
                      nseasons = 1,
                      season.duration = 1,
-                     dynamic.regression = FALSE)
+                     dynamic.regression = FALSE,
+                     max.flips = 100)
 
   # Test normal input
   expect_equal(FormatInputForConstructModel(data, model.args),
               list(data = data, model.args = model.args))
 
-  # Test that column names are assigned to <data> if it has no colum nmaes
+  # Test that column names are assigned to <data> if it has no column names
   anon.data <- zoo(cbind(rnorm(1000), rnorm(1000), rnorm(1000)))
   expected.data <- anon.data
   names(expected.data) <- c("y", "x1", "x2")
@@ -95,7 +96,7 @@ test_that("FormatInputForConstructModel", {
   bad.nseasons <- list(0, NA, as.numeric(NA), -1, 9.1, "foo", c(100, 200))
   lapply(bad.nseasons, function(nseasons) {
     expect_error(FormatInputForConstructModel(data,
-                                                list(nseasons = nseasons)))
+                                              list(nseasons = nseasons)))
   })
 
   # Test bad <season.duration>
@@ -109,8 +110,15 @@ test_that("FormatInputForConstructModel", {
   bad.dynamic.regression <- list(NA, as.numeric(NA), 123, "foo", c(TRUE, FALSE))
   lapply(bad.dynamic.regression, function(dynamic.regression) {
     expect_error(FormatInputForConstructModel(data,
-                                                list(dynamic.regression =
-                                                     dynamic.regression))) })
+                                              list(dynamic.regression =
+                                                dynamic.regression))) })
+
+  # Test bad <max.flips>
+  bad.max.flips <- list(-2, 9.1, "foo", c(100, 200))
+  lapply(bad.max.flips, function(max.flips) {
+    print(max.flips)
+    expect_error(FormatInputForConstructModel(data,
+                                              list(max.flips = max.flips))) })
 })
 
 test_that("ConstructModel", {

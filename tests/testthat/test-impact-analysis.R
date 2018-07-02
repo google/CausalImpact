@@ -674,6 +674,24 @@ test_that("CausalImpact.RunWithBstsModel", {
   }))
 })
 
+test_that("CausalImpact.RunWithMaxFlips", {
+
+  max.flips <- 10
+
+  # Create a dataset that with 200 columns/controls
+  data <- data.frame(matrix(rnorm(200 * 200), ncol = 200))
+
+  set.seed(1)
+  pre.period <- c(1, 100)
+  post.period <- c(101, 200)
+  model.args <- list(niter = 100, max.flips = max.flips)
+
+  suppressWarnings(impact <- CausalImpact(data, pre.period, post.period,
+                                          model.args))
+
+  expect_equal(impact$model$bsts.model$prior$max.flips, max.flips)
+})
+
 test_that("PrintSummary", {
   PrintSummary <- CausalImpact:::PrintSummary
 

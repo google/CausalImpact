@@ -30,7 +30,8 @@
                   prior.level.sd = 0.01,
                   nseasons = 1,
                   season.duration = 1,
-                  dynamic.regression = FALSE)
+                  dynamic.regression = FALSE,
+                  max.flips = -1)
 
 FormatInputData <- function(data) {
   # Checks and formats the <data> argument provided to CausalImpact().
@@ -300,6 +301,8 @@ CausalImpact <- function(data = NULL,
   #   nseasons:           number of seasons in the seasonal component
   #   season.duration:    duration of each season
   #   dynamic.regression: whether to have dynamic instead of static coefficients
+  #   max.flips:          number of variables to flip in and out of the model on
+  #                       each iteration
   #
   # For more details on all of the above, see the package manual (?CausalImpact)
   # or the vignette.
