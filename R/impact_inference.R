@@ -334,7 +334,7 @@ InterpretSummaryTable <- function(summary, digits = 2L) {
   # Summarize relative numbers (in which case row [1] = row [2])
   stmt <- paste0(stmt, "\n\nThe above results are given in terms of ",
                  "absolute numbers. In relative terms, the response variable ",
-                 "showed ", if (pos) "an increase of " else "a decrease of",
+                 "showed ", if (pos) "an increase of " else "a decrease of ",
                  rel.effect[1], ". The ", ci.coverage, " interval of this ",
                  "percentage is [", rel.effect.lower[1], ", ",
                  rel.effect.upper[1], "].")
