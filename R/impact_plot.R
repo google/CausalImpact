@@ -141,14 +141,16 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
 
   # Add zero line to pointwise and cumulative plot
   q <- q + geom_line(aes(y = baseline),
-                     colour = "darkgrey", size = 0.8, linetype = "solid")
+                     colour = "darkgrey", size = 0.8, linetype = "solid", 
+                     na.rm = TRUE)
 
   # Add point predictions
   q <- q + geom_line(aes(y = mean), data,
-                     size = 0.6, colour = "darkblue", linetype = "dashed")
+                     size = 0.6, colour = "darkblue", linetype = "dashed",
+                     na.rm = TRUE)
 
   # Add observed data
-  q <- q + geom_line(aes(y = response), size = 0.6)
+  q <- q + geom_line(aes(y = response), size = 0.6,  na.rm = TRUE)
   return(q)
 }
 
