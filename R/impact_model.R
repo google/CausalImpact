@@ -237,9 +237,10 @@ ConstructModel <- function(data, model.args = NULL) {
       # variable. We are then using SdPrior to only specify the prior on the
       # residual standard deviation.
       # prior.mean: precision of random walk of coefficients
-      sigma.mean.prior <- GammaPrior(prior.mean = 1, a = 4)
+      sdx <- apply(data[, -1, drop = FALSE], 2, function(x) sd(x, na.rm = TRUE))
+      model.options <- DynamicRegressionRandomWalkOptions(sdx = sdx, sdy = sdy)
       ss <- AddDynamicRegression(ss, formula, data = data,
-                                 sigma.mean.prior = sigma.mean.prior)
+                                 model.options = model.options)
       sd.prior <- SdPrior(sigma.guess = model.args$prior.level.sd * sdy,
                           upper.limit = 0.1 * sdy,
                           sample.size = kDynamicRegressionPriorSampleSize)
