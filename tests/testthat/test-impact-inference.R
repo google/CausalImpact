@@ -1,4 +1,4 @@
-# Copyright 2014 Google Inc. All rights reserved.
+# Copyright 2014-2020 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ test_that("GetPosteriorStateSamples", {
   model.args <- list(niter = 100)
 
   # Create a healthy bsts.model and test it
-  bsts.model <- ConstructModel(data, model.args)
+  suppressWarnings(bsts.model <- ConstructModel(data, model.args))
   state.samples <- GetPosteriorStateSamples(bsts.model)
   expect_equal(ncol(state.samples), 365)
 })
@@ -43,7 +43,7 @@ test_that("ComputeResponseTrajectories", {
   # Test healthy input
   data <- zoo(cbind(rnorm(365), rnorm(365), rnorm(365)))
   model.args <- list(niter = 100)
-  bsts.model <- ConstructModel(data, model.args)
+  suppressWarnings(bsts.model <- ConstructModel(data, model.args))
   y.samples <- ComputeResponseTrajectories(bsts.model)
   expect_equal(ncol(y.samples), 365)
 })

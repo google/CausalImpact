@@ -1,4 +1,4 @@
-# Copyright 2014-2017 Google Inc. All rights reserved.
+# Copyright 2014-2020 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,16 +28,29 @@ test_that("ObservationsAreIllConditioned", {
   expect_false(ObservationsAreIllConditioned(c(NA, NA, 1, NA, 2, 3, NA, NA)))
 
   # Test all NA
-  expect_true(ObservationsAreIllConditioned(c(NA, NA, NA, NA, NA)))
+  expect_warning(ObservationsAreIllConditioned(c(NA, NA, NA, NA, NA)), "all NA")
+  expect_true(suppressWarnings(
+    ObservationsAreIllConditioned(c(NA, NA, NA, NA, NA))))
 
   # Test fewer than 3 non-NA values
   expect_error(ObservationsAreIllConditioned(NULL))
   expect_error(ObservationsAreIllConditioned(c()))
-  expect_true(ObservationsAreIllConditioned(c(1)))
-  expect_true(ObservationsAreIllConditioned(c(1, 2)))
-  expect_true(ObservationsAreIllConditioned(c(1, 2, NA)))
-  expect_true(ObservationsAreIllConditioned(c(NA, 1, 2, NA)))
-  expect_true(ObservationsAreIllConditioned(c(NA, 1, 2, NA, NA)))
+  expect_warning(ObservationsAreIllConditioned(c(1)),
+                 "fewer than 3 non-NA values")
+  expect_true(suppressWarnings(ObservationsAreIllConditioned(c(1))))
+  expect_warning(ObservationsAreIllConditioned(c(1, 2)),
+                 "fewer than 3 non-NA values")
+  expect_true(suppressWarnings(ObservationsAreIllConditioned(c(1, 2))))
+  expect_warning(ObservationsAreIllConditioned(c(1, 2, NA)),
+                 "fewer than 3 non-NA values")
+  expect_true(suppressWarnings(ObservationsAreIllConditioned(c(1, 2, NA))))
+  expect_warning(ObservationsAreIllConditioned(c(NA, 1, 2, NA)),
+                 "fewer than 3 non-NA values")
+  expect_true(suppressWarnings(ObservationsAreIllConditioned(c(NA, 1, 2, NA))))
+  expect_warning(ObservationsAreIllConditioned(c(NA, 1, 2, NA, NA)),
+                 "fewer than 3 non-NA values")
+  expect_true(suppressWarnings(
+    ObservationsAreIllConditioned(c(NA, 1, 2, NA, NA))))
 })
 
 test_that("FormatInputForConstructModel", {

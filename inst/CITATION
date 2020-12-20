@@ -3,7 +3,7 @@ bibentry(
     textVersion =
         paste0("Brodersen et al., 2015, Annals of Applied Statistics. ",
                "Inferring causal impact using Bayesian structural time-series ",
-               "models. http://research.google.com/pubs/pub41854.html"),
+               "models. https://research.google/pubs/pub41854/"),
     header = "To cite CausalImpact in publications use:",
 
     title = paste0("Inferring causal impact using {B}ayesian structural ",
@@ -18,5 +18,5 @@ bibentry(
     year = "2014",
     volume = "9",
     pages = "247--274",
-    url = "http://research.google.com/pubs/pub41854.html"
+    url = "https://research.google/pubs/pub41854/"
 )

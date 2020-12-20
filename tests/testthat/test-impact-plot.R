@@ -1,4 +1,4 @@
-# Copyright 2014 Google Inc. All rights reserved.
+# Copyright 2014-2020 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -121,13 +121,13 @@ test_that("CreateImpactPlot", {
   # Test plot.CausalImpact() generic
   q1 <- CreateImpactPlot(impact)
   q2 <- plot(impact)  # dispatched to plot.CausalImpact()
-  expect_equal(q1, q2)
+  expect_equal(q1, q2, check.environment = FALSE)
 
   # Test plotting different metrics
   q1 <- plot(impact)
   q2 <- plot(impact, c("original", "pointwise", "cumulative"))
   q3 <- plot(impact, c("o", "point", "c"))
-  expect_equal(q1, q2)
+  expect_equal(q1, q2, check.environment = FALSE)
   # As of ggplot 2.0.0, `q1` and `q2` are still the same but `q3` is different.
   # This is because `q1` and `q2` contains:
   # > q1$plot_env$metrics
@@ -139,10 +139,10 @@ test_that("CreateImpactPlot", {
   #  "original"  "pointwise" "cumulative"
   # So we test whether `q1` equals `q3` except for `$plot_env$metrics`.
   q3$plot_env$metrics <- q2$plot_env$metrics
-  expect_equal(q1, q3)
+  expect_equal(q1, q3, check.environment = FALSE)
 
   # Test different order
   q1 <- plot(impact, c("p", "c"))
   q2 <- plot(impact, c("c", "p"))
-  expect_true(!isTRUE(all.equal(q1, q2)))
+  expect_true(!isTRUE(all.equal(q1, q2, check.environment = FALSE)))
 })

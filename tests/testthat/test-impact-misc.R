@@ -1,4 +1,4 @@
-# Copyright 2014-2017 Google Inc. All rights reserved.
+# Copyright 2014-2020 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -187,7 +187,8 @@ test_that("StandardizeAllVariables", {
     expect_equal(mean(result$data[, column]), 0, tolerance = 0.0001);
     expect_equal(sd(result$data[, column]), 1, tolerance = 0.0001)
   })
-  expect_equal(result$UnStandardize, Standardize(data[, 1])$UnStandardize)
+  expect_equal(result$UnStandardize, Standardize(data[, 1])$UnStandardize,
+               check.environment = FALSE)
 
   # Test that several columns are standardized correctly when fitting mean and
   # SD only over part of the rows.
@@ -196,7 +197,8 @@ test_that("StandardizeAllVariables", {
     expect_equal(mean(result$data[11 : 90, column]), 0, tolerance = 0.0001);
     expect_equal(sd(result$data[11 : 90, column]), 1, tolerance = 0.0001)
   })
-  expect_equal(result$UnStandardize, Standardize(data[, 1])$UnStandardize)
+  expect_equal(result$UnStandardize, Standardize(data[, 1])$UnStandardize,
+               check.environment = FALSE)
 
   # Test healthy input: single series only
   set.seed(1)
@@ -206,14 +208,16 @@ test_that("StandardizeAllVariables", {
   expect_equal(names(result), c("data", "UnStandardize"))
   expect_equal(mean(result$data), 0, tolerance = 0.0001)
   expect_equal(sd(result$data), 1, tolerance = 0.0001)
-  expect_equal(result$UnStandardize, Standardize(data)$UnStandardize)
+  expect_equal(result$UnStandardize, Standardize(data)$UnStandardize,
+               check.environment = FALSE)
 
   # Test that a single series is standardized correctly when fitting mean and SD
   # only over part of the data range.
   result <- StandardizeAllVariables(data, c(11, 90))
   expect_equal(mean(result$data[11: 90]), 0, tolerance = 0.0001)
   expect_equal(sd(result$data[11 : 90]), 1, tolerance = 0.0001)
-  expect_equal(result$UnStandardize, Standardize(data)$UnStandardize)
+  expect_equal(result$UnStandardize, Standardize(data)$UnStandardize,
+               check.environment = FALSE)
 })
 
 test_that("GetPeriodIndices.InvalidInput", {

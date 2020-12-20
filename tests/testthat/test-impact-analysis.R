@@ -1,4 +1,4 @@
-# Copyright 2014-2017 Google Inc. All rights reserved.
+# Copyright 2014-2020 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -408,8 +408,9 @@ test_that("CausalImpact.RunWithData.MissingValues", {
   pre.period <- c(1, 20)
   post.period <- c(21, 30)
   model.args <- list(niter = 100)
-  expect_error(impact <- CausalImpact(data, pre.period, post.period,
-                                      model.args),
+  expect_error(suppressWarnings(impact <- CausalImpact(data, pre.period,
+                                                       post.period,
+                                                       model.args)),
                NA)
   # Test that all columns in the result series except those associated with
   # point predictions have missing values at the time points the result time
@@ -469,8 +470,9 @@ test_that("CausalImpact.RunWithData.StandardizeData", {
               tolerance = 0.001)
   expect_equal(impact1$series, impact2$series, tolerance = 0.1)
 
-  # Recover ground truth (generative model with 1 covariate)
-  # with/without <standardize.data>
+  # Recover ground truth (generative model with 1 covariate) with/without
+  # <standardize.data>. Suppressing the warning that there might not be enough
+  # MCMC samples in CausalImpact calls.
   set.seed(1)
   n <- 500
   x1 <- sin(1:n / 100) + rnorm(n, 0, 0.1)
@@ -480,14 +482,14 @@ test_that("CausalImpact.RunWithData.StandardizeData", {
   pre.period <- c(1, 250)
   post.period <- c(251, 500)
   data <- cbind(y, x1)
-  impact1 <- CausalImpact(data, pre.period, post.period,
-                          model.args = list(niter = 500,
-                                            standardize.data = FALSE))
+  suppressWarnings(impact1 <- CausalImpact(
+    data, pre.period, post.period, 
+    model.args = list(niter = 500, standardize.data = FALSE)))
   estimates1 <- colMeans(impact1$model$bsts.model$coefficients)
   expect_equal(as.vector(estimates1)[2], beta[2], tolerance = 0.05)
-  impact2 <- CausalImpact(data, pre.period, post.period,
-                          model.args = list(niter = 500,
-                                            standardize.data = TRUE))
+  suppressWarnings(impact2 <- CausalImpact(
+    data, pre.period, post.period,
+    model.args = list(niter = 500, standardize.data = TRUE)))
   estimates2 <- colMeans(impact2$model$bsts.model$coefficients)
   expect_equal(as.vector(estimates2)[2], 1, tolerance = 0.05)
 })
@@ -577,13 +579,16 @@ test_that("CausalImpact.RunWithData.MissingTimePoint", {
   post.period <- as.Date(c("2017-01-16", "2017-01-20"))
   model.args <- list(niter = 100)
 
-  # Missing in pre-period
-  impact <- CausalImpact(series[-10, ], pre.period, post.period, model.args)
+  # Missing in pre-period. Suppressing the warning that there might not be
+  # enough MCMC samples.
+  suppressWarnings(impact <- CausalImpact(series[-10, ], pre.period, 
+                                          post.period, model.args))
   indices <- time(impact$series)
   expect_equal(indices, time(series)[-10])
 
   # Missing in post-period
-  impact <- CausalImpact(series[-17, ], pre.period, post.period, model.args)
+  suppressWarnings(impact <- CausalImpact(series[-17, ], pre.period,
+                                          post.period, model.args))
   indices <- time(impact$series)
   expect_equal(indices, time(series)[-17])
 })

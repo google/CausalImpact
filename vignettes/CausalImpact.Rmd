@@ -35,7 +35,7 @@ evolved after the intervention if the intervention had never occurred. For a
 quick overview, watch the
 [tutorial video](https://www.youtube.com/watch?v=GTgZfCltMm8).
 For details, see:
-[Brodersen et al., Annals of Applied Statistics (2015)](http://research.google.com/pubs/pub41854.html).
+[Brodersen et al., Annals of Applied Statistics (2015)](https://research.google/pubs/pub41854/).
 
 #### What assumptions does the model make?
 
@@ -332,7 +332,7 @@ We recommend referencing the use of the CausalImpact R package as shown in the
 example below:
 
 "CausalImpact `r packageVersion("CausalImpact")`, Brodersen et al., Annals of
-Applied Statistics (2015). http://google.github.io/CausalImpact/"
+Applied Statistics (2015). https://google.github.io/CausalImpact/"
 
 To find out which package version you are using, type
 `packageVersion("CausalImpact")`. See the bottom of this page for full
@@ -422,11 +422,11 @@ the plot, see
 Brodersen KH, Gallusser F, Koehler J, Remy N, Scott SL.
 Inferring causal impact using Bayesian structural time-series models.
 *Annals of Applied Statistics*, 2015, Vol. 9, No. 1, 247-274.
-http://research.google.com/pubs/pub41854.html
+https://research.google/pubs/pub41854/
 
 ### Discussion forum
 
-http://stats.stackexchange.com/
+https://stats.stackexchange.com/
 
 
 - - -

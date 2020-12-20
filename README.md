@@ -35,12 +35,12 @@ library(CausalImpact)
 ## Further resources
 
 *   Manuscript:
-    [Brodersen et al., Annals of Applied Statistics (2015)](http://research.google.com/pubs/pub41854.html)
+    [Brodersen et al., Annals of Applied Statistics (2015)](https://research.google/pubs/pub41854/)
 
 *   For questions on the statistics behind CausalImpact:
-    [Cross Validated](http://stats.stackexchange.com/questions/tagged/causalimpact)
+    [Cross Validated](https://stats.stackexchange.com/questions/tagged/causalimpact)
 
 *   For questions on how to use the CausalImpact R package:
-    [Stack Overflow](http://stackoverflow.com/questions/tagged/causalimpact)
+    [Stack Overflow](https://stackoverflow.com/questions/tagged/causalimpact)
 
 *   [Bug reports](https://github.com/google/CausalImpact/issues)
