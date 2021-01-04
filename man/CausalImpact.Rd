@@ -162,7 +162,7 @@
       Posterior cumulative effect. \cr
       \code{cum.effect.lower} \tab
       Lower limit of the posterior interval (as above). \cr
-      \code{cum.effect.lower} \tab
+      \code{cum.effect.upper} \tab
       Upper limit of the posterior interval (as above). \cr
     }
 }
