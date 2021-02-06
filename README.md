@@ -1,5 +1,9 @@
 # CausalImpact
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/google/CausalImpact/workflows/R-CMD-check/badge.svg)](https://github.com/google/CausalImpact/actions)
+<!-- badges: end -->
+
 ## An R package for causal inference using Bayesian structural time-series models
 
 This R package implements an approach to estimating the causal effect of a
