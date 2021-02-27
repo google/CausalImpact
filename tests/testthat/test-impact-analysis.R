@@ -707,9 +707,9 @@ test_that("PrintSummary", {
   model.args <- list(niter = 100)
   suppressWarnings(impact <- CausalImpact(data, pre.period, post.period,
                                           model.args))
-  expect_output(PrintSummary(impact), "\\([0-9]+\\.[0-9]{2}\\)")
+  expect_output(PrintSummary(impact), "\\([0-9.]{3}[0-9]*\\)")
   expect_output(PrintSummary(impact, digits = 0), "\\([0-9]+\\)")
-  expect_output(PrintSummary(impact, digits = 10), "\\([0-9]+\\.[0-9]{10}\\)")
+  expect_output(PrintSummary(impact, digits = 10), "\\([0-9.]{11}[0-9]*\\)")
 })
 
 test_that("PrintReport", {
