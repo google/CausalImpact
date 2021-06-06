@@ -1,4 +1,4 @@
-# Copyright 2014-2020 Google Inc. All rights reserved.
+# Copyright 2014-2021 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -483,7 +483,7 @@ test_that("CausalImpact.RunWithData.StandardizeData", {
   post.period <- c(251, 500)
   data <- cbind(y, x1)
   suppressWarnings(impact1 <- CausalImpact(
-    data, pre.period, post.period, 
+    data, pre.period, post.period,
     model.args = list(niter = 500, standardize.data = FALSE)))
   estimates1 <- colMeans(impact1$model$bsts.model$coefficients)
   expect_equal(as.vector(estimates1)[2], beta[2], tolerance = 0.05)
@@ -581,7 +581,7 @@ test_that("CausalImpact.RunWithData.MissingTimePoint", {
 
   # Missing in pre-period. Suppressing the warning that there might not be
   # enough MCMC samples.
-  suppressWarnings(impact <- CausalImpact(series[-10, ], pre.period, 
+  suppressWarnings(impact <- CausalImpact(series[-10, ], pre.period,
                                           post.period, model.args))
   indices <- time(impact$series)
   expect_equal(indices, time(series)[-10])
@@ -708,8 +708,9 @@ test_that("PrintSummary", {
   suppressWarnings(impact <- CausalImpact(data, pre.period, post.period,
                                           model.args))
   expect_output(PrintSummary(impact), "\\([0-9.]{3}[0-9]*\\)")
-  expect_output(PrintSummary(impact, digits = 0), "\\([0-9]+\\)")
   expect_output(PrintSummary(impact, digits = 10), "\\([0-9.]{11}[0-9]*\\)")
+  expect_error(PrintSummary(impact, digits = 0), "positive")
+  expect_error(PrintSummary(impact, digits = "test"), "positive")
 })
 
 test_that("PrintReport", {

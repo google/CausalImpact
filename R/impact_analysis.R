@@ -1,4 +1,4 @@
-# Copyright 2014-2020 Google Inc. All rights reserved.
+# Copyright 2014-2021 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -511,10 +511,12 @@ PrintSummary <- function(impact, digits = 2L) {
   #   impact: A \code{CausalImpact} results object, as returned by
   #           \code{CausalImpact()}.
   #
-  #   digits: Number of digits to print for all numbers.
+  #   digits: Number of significant digits to print for all numbers.
 
   # Check input
   assert_that(class(impact) == "CausalImpact")
+  assert_that(is.numeric(digits), is.scalar(digits), as.integer(digits) > 0,
+              msg = "<digits> must be a positive integer")
   summary <- impact$summary
   alpha <- impact$model$alpha
   assert_that(!is.null(alpha) && alpha > 0,
@@ -528,19 +530,18 @@ PrintSummary <- function(impact, digits = 2L) {
   }
 
   # Define formatting helper functions
-  StrTrim <- function (x) gsub("^\\s+|\\s+$", "", x)
-  FormatNumber <- function(x) StrTrim(format(x, digits = digits))
+  FormatNumber <- function(x) format(x, digits = digits, trim = TRUE)
   FormatPercent <- function(x) {
-    StrTrim(paste0(format(x * 100, digits = digits), "%"))
+    paste0(format(x * 100, digits = digits, trim = TRUE), "%")
   }
   FormatCI <- function(a, b) {
-    paste0("[", StrTrim(format(a, digits = min(digits, 2))),
-           ", ", StrTrim(format(b, digits = min(digits, 2))),
+    paste0("[", format(a, digits = min(digits, 2), trim = TRUE),
+           ", ", format(b, digits = min(digits, 2), trim = TRUE),
            "]")
   }
   FormatPercentCI <- function(a, b) {
-    paste0("[", StrTrim(format(a * 100, digits = min(digits, 2))),
-           "%, ", StrTrim(format(b * 100, digits = min(digits, 2))),
+    paste0("[", format(a * 100, digits = min(digits, 2), trim = TRUE),
+           "%, ", format(b * 100, digits = min(digits, 2), trim = TRUE),
            "%]")
   }
 
