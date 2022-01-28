@@ -1,4 +1,4 @@
-# Copyright 2014-2020 Google Inc. All rights reserved.
+# Copyright 2014-2021 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-testthat::context("Unit tests for impact_model_ss.R")
+testthat::context("Unit tests for impact_model.R")
 
 # Author: kbrodersen@google.com (Kay Brodersen)
 
@@ -129,7 +129,6 @@ test_that("FormatInputForConstructModel", {
   # Test bad <max.flips>
   bad.max.flips <- list(-2, 9.1, "foo", c(100, 200))
   lapply(bad.max.flips, function(max.flips) {
-    print(max.flips)
     expect_error(FormatInputForConstructModel(data,
                                               list(max.flips = max.flips))) })
 })
