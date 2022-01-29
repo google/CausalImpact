@@ -23,8 +23,8 @@
 #
 # Author: kbrodersen@google.com (Kay Brodersen)
 
-# Specify defaults for <model.args>
-# (should always be in sync with the documentation of CausalImpact())
+# Specify defaults for `model.args`.
+# Should always be in sync with the documentation of `CausalImpact()`.
 .defaults <- list(niter = 1000,
                   standardize.data = TRUE,
                   prior.level.sd = 0.01,
@@ -33,7 +33,7 @@
                   dynamic.regression = FALSE,
                   max.flips = -1)
 
-#' Check and format the \code{data} argument provided to \code{CausalImpact()}
+#' @title Check and format the `data` argument provided to `CausalImpact()`
 #'
 #' @param data A zoo object, a vector, a matrix, or a data frame.
 #'
@@ -58,15 +58,15 @@ FormatInputData <- function(data) {
   data <- TryStop(as.zoo(data), "could not convert input data to zoo object")
   assert_that(is.numeric(data))
 
-  # Ensure <data> is formatted in such a way that rows represent time points
+  # Ensure <data> is formatted in such a way that rows represent time points.
   if (is.null(ncol(data))) {
     dim(data) <- c(length(data), 1)
   }
 
-  # Must have at least 3 time points
+  # Must have at least 3 time points.
   assert_that(nrow(data) > 3)
 
-  # Must not have NA in covariates (if any)
+  # Must not have NA in covariates (if any).
   if (ncol(data) >= 2) {
     assert_that(!anyNA(data[, -1]), msg = "covariates must not have NA values")
   }
@@ -80,7 +80,6 @@ FormatInputData <- function(data) {
                              ncol = ncol(data.matrix),
                              dimnames = dimnames(data.matrix))
   }
-
   return(data)
 }
 
