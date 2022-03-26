@@ -1,4 +1,4 @@
-# Copyright 2014 Google Inc. All rights reserved.
+# Copyright 2014-2022 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -141,7 +141,7 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
 
   # Add zero line to pointwise and cumulative plot
   q <- q + geom_line(aes(y = baseline),
-                     colour = "darkgrey", size = 0.8, linetype = "solid", 
+                     colour = "darkgrey", size = 0.8, linetype = "solid",
                      na.rm = TRUE)
 
   # Add point predictions
