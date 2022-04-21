@@ -593,6 +593,33 @@ test_that("CausalImpact.RunWithData.MissingTimePoint", {
   expect_equal(indices, time(series)[-17])
 })
 
+test_that("CausalImpact.RunWithData.CustomConstructModel", {
+  # Test daily data (zoo object)
+  data <- zoo(cbind(rnorm(200), rnorm(200), rnorm(200)),
+              seq.Date(as.Date("2014-01-01"), as.Date("2014-01-01") + 199,
+                       by = 1))
+
+  pre.period <- as.Date(c("2014-01-01", "2014-04-10"))  # 100 days
+  post.period <- as.Date(c("2014-04-21", "2014-07-09"))  # 80 days
+
+  go <- function(data) {
+    y <- data[, 1]
+    sdy <- sd(y, na.rm = TRUE)
+    sd.prior <- SdPrior(sigma.guess = 0.01 * sdy,
+                        upper.limit = sdy,
+                        sample.size = 32)
+    ss <- AddLocalLevel(list(), y, sigma.prior = sd.prior)
+    bsts.model <- bsts(y, state.specification = ss, niter = 100,
+                       seed = 1, ping = 0)
+  }
+
+  suppressWarnings(impact <- CausalImpact(data, pre.period, post.period,
+                                          construct.model = go))
+  expect_equal(time(impact$model$bsts.model$original.series), 1:200)
+  expect_equal(time(impact$series), time(data))
+  CallAllS3Methods(impact)
+})
+
 test_that("CausalImpact.RunWithBstsModel", {
 
   # Test on a healthy bsts object
