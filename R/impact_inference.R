@@ -226,7 +226,7 @@ CompileSummaryTable <- function(y.post, y.samples.post,
   # Compile summary statistics
   summary <- data.frame(
       Actual = c(mean(y.post), sum(y.post)),
-      Pred = c(mean(point.pred.mean.post), sum(abs(point.pred.mean.post))),
+      Pred = c(mean(point.pred.mean.post), sum(point.pred.mean.post)),
       Pred.lower = c(quantile(rowMeans(y.samples.post), prob.lower),
                      quantile(rowSums(y.samples.post), prob.lower)),
       Pred.upper = c(quantile(rowMeans(y.samples.post), prob.upper),
@@ -246,10 +246,10 @@ CompileSummaryTable <- function(y.post, y.samples.post,
       AbsEffect.sd = c(sd(rowMeans(y.repmat.post - y.samples.post)),
                        sd(rowSums(y.repmat.post - y.samples.post))))
   summary <- dplyr::mutate(summary,
-                           RelEffect = AbsEffect / Pred,
-                           RelEffect.lower = AbsEffect.lower / Pred,
-                           RelEffect.upper = AbsEffect.upper / Pred,
-                           RelEffect.sd = AbsEffect.sd / Pred)
+                           RelEffect = AbsEffect / abs(Pred),
+                           RelEffect.lower = AbsEffect.lower / abs(Pred),
+                           RelEffect.upper = AbsEffect.upper / abs(Pred),
+                           RelEffect.sd = AbsEffect.sd / abs(Pred))
   rownames(summary) <- c("Average", "Cumulative")
 
   # Add interval coverage, defined by alpha
