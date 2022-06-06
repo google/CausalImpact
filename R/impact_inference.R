@@ -226,7 +226,7 @@ CompileSummaryTable <- function(y.post, y.samples.post,
   # Compile summary statistics
   summary <- data.frame(
       Actual = c(mean(y.post), sum(y.post)),
-      Pred = c(mean(point.pred.mean.post), sum(point.pred.mean.post)),
+      Pred = c(mean(abs(point.pred.mean.post)), sum(abs(point.pred.mean.post))),
       Pred.lower = c(quantile(rowMeans(y.samples.post), prob.lower),
                      quantile(rowSums(y.samples.post), prob.lower)),
       Pred.upper = c(quantile(rowMeans(y.samples.post), prob.upper),
