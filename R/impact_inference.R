@@ -223,6 +223,20 @@ CompileSummaryTable <- function(y.post, y.samples.post,
   prob.lower <- alpha / 2      # e.g., 0.025 when alpha = 0.05
   prob.upper <- 1 - alpha / 2  # e.g., 0.975 when alpha = 0.05
 
+  # Obtain matrix of posterior samples for relative effect at each time point
+  # for post period
+  if (length(y.post) == 1) {
+     RelEffect.post <- (1 / y.samples.post) * y.post - 1
+  } else {
+     RelEffect.post <- (1 / y.samples.post) %*% diag(y.post) - 1
+  }
+
+  # Obtain posterior sample for cumulative relative effect for post period
+  RelEffect.cum.post <- sum(y.post)/rowSums(y.samples.post) - 1
+  # Obtain posterior sample for average relative effect for post period
+  # make average relative effect and cumulative relative effect identical
+  RelEffect.average.post <- RelEffect.cum.post
+
   # Compile summary statistics
   summary <- data.frame(
       Actual = c(mean(y.post), sum(y.post)),
@@ -244,12 +258,15 @@ CompileSummaryTable <- function(y.post, y.samples.post,
                           quantile(rowSums(y.repmat.post - y.samples.post),
                                    prob.upper)),
       AbsEffect.sd = c(sd(rowMeans(y.repmat.post - y.samples.post)),
-                       sd(rowSums(y.repmat.post - y.samples.post))))
-  summary <- dplyr::mutate(summary,
-                           RelEffect = AbsEffect / Pred,
-                           RelEffect.lower = AbsEffect.lower / Pred,
-                           RelEffect.upper = AbsEffect.upper / Pred,
-                           RelEffect.sd = AbsEffect.sd / Pred)
+                       sd(rowSums(y.repmat.post - y.samples.post))),
+      RelEffect = c(mean(RelEffect.average.post), mean(RelEffect.cum.post)),
+      RelEffect.lower = c(quantile(RelEffect.average.post, prob.lower),
+                     quantile(RelEffect.cum.post, prob.lower)),
+      RelEffect.upper = c(quantile(RelEffect.average.post, prob.upper),
+                     quantile(RelEffect.cum.post, prob.upper)),
+      RelEffect.sd = c(sd(RelEffect.average.post),
+                     sd(RelEffect.cum.post))
+  )
   rownames(summary) <- c("Average", "Cumulative")
 
   # Add interval coverage, defined by alpha
@@ -593,7 +610,8 @@ CompilePosteriorInferences <- function(bsts.model, y.cf, post.period,
   # Return <series> and <summary>
   return(list(series = series,
               summary = summary,
-              report = report))
+              report = report,
+              posterior.samples = y.samples))
 }
 
 CompileNaInferences <- function(y.model) {
@@ -624,5 +642,6 @@ CompileNaInferences <- function(y.model) {
   # Return NA <series> and NULL <summary>
   return(list(series = series,
               summary = NULL,
-              report = NULL))
+              report = NULL,
+              posterior.samples = NULL))
 }

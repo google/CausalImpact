@@ -165,6 +165,15 @@ test_that("CompileSummaryTable", {
                                      point.pred.mean.post))
   expect_error(CompileSummaryTable(y.post, y.samples.post,
                                      point.pred.mean.post[1 : 9]))
+
+  # Check that sd > 0 and upper > lower, even when effect is negative.
+  set.seed(1)
+  y.post <- -2 + rnorm(100)
+  y.samples.post <- matrix(rnorm(1000), nrow = 10)
+  point.pred.mean.post <- rnorm(100)
+  summary <- CompileSummaryTable(y.post, y.samples.post, point.pred.mean.post)
+  expect_true(summary$RelEffect.upper[1] > summary$RelEffect.lower[1])
+  expect_true(summary$RelEffect.sd[1] > 0)
 })
 
 test_that("InterpretSummaryTable", {
@@ -282,7 +291,12 @@ test_that("CompilePosteriorInferences", {
   UnStandardize <- identity
   inferences <- CompilePosteriorInferences(bsts.model, y.cf, post.period,
                                            alpha, UnStandardize)
-  expect_equal(names(inferences), c("series", "summary", "report"))
+  expect_equal(names(inferences), c("series", "summary", "report",
+                                    "posterior.samples"))
+  expect_is(inferences$posterior.samples, "matrix")
+  expect_equal(ncol(inferences$posterior.samples), 200)
+  expect_gte(nrow(inferences$posterior.samples), 80)
+  expect_lte(nrow(inferences$posterior.samples), 100)
   expect_equal(inferences$series$y.model, zoo(rbind(data[1 : 100, 1], y.cf)))
   expected.series.columns <-
     c("y.model", "cum.y.model",
@@ -312,7 +326,9 @@ test_that("CompileNaInferences", {
 
   # Test healty input
   result <- CompileNaInferences(zoo(c(1, 2, 3)))
-  expect_equal(names(result), c("series", "summary", "report"))
+  expect_equal(names(result), c("series", "summary", "report",
+                                "posterior.samples"))
+  expect_equal(dim(result$posterior.samples), NULL)
   expect_true(is.zoo(result$series))
   expect_equal(nrow(result$series), 3)
   expect_equal(ncol(result$series), 14)

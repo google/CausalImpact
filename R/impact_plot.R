@@ -150,7 +150,7 @@ CreateImpactPlot <- function(impact, metrics = c("original", "pointwise",
                      na.rm = TRUE)
 
   # Add observed data
-  q <- q + geom_line(aes(y = response), size = 0.6,  na.rm = TRUE)
+  q <- q + geom_line(aes(y = response), size = 0.6, na.rm = TRUE)
   return(q)
 }
 
