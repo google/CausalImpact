@@ -2,6 +2,7 @@
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/google/CausalImpact/workflows/R-CMD-check/badge.svg)](https://github.com/google/CausalImpact/actions)
+[![Codecov test coverage](https://codecov.io/gh/google/CausalImpact/branch/master/graph/badge.svg)](https://app.codecov.io/gh/google/CausalImpact?branch=master)
 <!-- badges: end -->
 
 ## An R package for causal inference using Bayesian structural time-series models

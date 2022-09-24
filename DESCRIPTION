@@ -15,4 +15,8 @@ VignetteBuilder: knitr
 License: Apache License 2.0 | file LICENSE
 Imports: assertthat (>= 0.2.0), Boom, dplyr, ggplot2, zoo
 Depends: bsts (>= 0.9.0)
-Suggests: knitr, rmarkdown, testthat
+Suggests: 
+    covr,
+    knitr,
+    rmarkdown,
+    testthat
