@@ -58,7 +58,7 @@ FormatInputData <- function(data) {
   data <- TryStop(as.zoo(data), "could not convert input data to zoo object")
   assert_that(is.numeric(data))
 
-  # Ensure <data> is formatted in such a way that rows represent time points.
+  # Ensure `data` is formatted in such a way that rows represent time points.
   if (is.null(ncol(data))) {
     dim(data) <- c(length(data), 1)
   }
@@ -282,12 +282,15 @@ CausalImpact <- function(data = NULL,
   #     series:  observed data, counterfactual, pointwise and cumulative impact
   #     summary: summary table
   #     report:  verbal description of the analysis
-  #     model:   list with four elements \code{pre.period}, \code{post.period},
-  #              \code{bsts.model} and \code{alpha}. \code{pre.period} and
-  #              \code{post.period} indicate the first and last time point of
-  #              the time series in the respective period, \code{bsts.model} is
-  #              the fitted model returned by \code{bsts()}, and \code{alpha}
-  #              is the user-specified tail-area probability.
+  #     model:   list with five elements \code{pre.period}, \code{post.period},
+  #              \code{bsts.model}, \code{alpha}, and \code{posterior.samples}.
+  #              \code{pre.period} and \code{post.period} indicate the first and
+  #              last time point of the time series in the respective period,
+  #              \code{bsts.model} is the fitted model returned by
+  #              \code{bsts()}, \code{alpha} is the user-specified tail-area
+  #              probability, and \code{posterior.samples} is the
+  #              [n_samples (post burn-in) x n_observations] matrix of posterior
+  #              samples of predicted responses for the whole time period.
   #
   # Optional arguments for model.args:
   #   niter:              number of MCMC iterations
@@ -444,7 +447,8 @@ RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
                 post.period = times[post.period],
                 model.args = model.args,
                 bsts.model = bsts.model,
-                alpha = alpha)
+                alpha = alpha,
+                posterior.samples = inferences$posterior.samples)
   impact <- list(series = inferences$series,
                  summary = inferences$summary,
                  report = inferences$report,
@@ -493,7 +497,8 @@ RunWithBstsModel <- function(bsts.model, post.period.response, alpha = 0.05) {
   model <- list(pre.period = times[indices$pre.period],
                 post.period = times[indices$post.period],
                 bsts.model = bsts.model,
-                alpha = alpha)
+                alpha = alpha,
+                posterior.samples = inferences$posterior.samples)
   impact <- list(series = inferences$series,
                  summary = inferences$summary,
                  report = inferences$report,

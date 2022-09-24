@@ -240,6 +240,9 @@ test_that("CausalImpact.RunWithData.DataFormats", {
   suppressWarnings(impact <- CausalImpact(data, pre.period, post.period,
                                           model.args))
   expect_equal(names(impact), c("series", "summary", "report", "model"))
+  expect_equal(names(impact$model), c("pre.period", "post.period",
+                                      "model.args","bsts.model",
+                                      "alpha", "posterior.samples"))
   expect_equal(names(impact$series), .expected.series.columns)
   expect_equal(nrow(impact$series), nrow(data))
   expect_equal(time(impact$series), time(data))
@@ -593,6 +596,27 @@ test_that("CausalImpact.RunWithData.MissingTimePoint", {
   expect_equal(indices, time(series)[-17])
 })
 
+test_that("CausalImpact.RunWithData.NegativePrediction", {
+  # Test that even with a negative prediction, the upper bound is greater
+  # than the lower bound
+  set.seed(1)
+  n <- 200
+  x1 <- sin(1:n / 50) + rnorm(n, 0, 0.1)
+  w <- rnorm(n, 0, 0.1)
+  beta <- c(-5, -3)
+  y <- beta[1] + beta[2] * x1 + w
+  y[101:200] <- y[101:200] * (1.1)
+  data <- cbind(y, x1)
+  pre.period <- c(1, 100)
+  post.period <- c(101, 200)
+  impact <- CausalImpact(data, pre.period, post.period, alpha=.05)
+  results <- impact$summary[1, c('RelEffect.lower', 'RelEffect.upper',
+                                 'RelEffect.sd')]
+  expect_true(results$RelEffect.upper > results$RelEffect.lower)
+  # Test that standard deviation is positive
+  expect_true(results$RelEffect.sd > 0)
+})
+
 test_that("CausalImpact.RunWithBstsModel", {
 
   # Test on a healthy bsts object
@@ -605,6 +629,9 @@ test_that("CausalImpact.RunWithBstsModel", {
   impact <- CausalImpact(bsts.model = bsts.model,
                          post.period.response = post.period.response)
   expect_equal(names(impact), c("series", "summary", "report", "model"))
+  expect_equal(names(impact$model), c("pre.period", "post.period",
+                                      "bsts.model", "alpha",
+                                      "posterior.samples"))
   expect_equal(names(impact$series), .expected.series.columns)
   expect_equal(nrow(impact$series), length(y))
   expect_equal(time(impact$series), 1:length(y))
