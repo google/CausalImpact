@@ -80,7 +80,6 @@ FormatInputData <- function(data) {
                              ncol = ncol(data.matrix),
                              dimnames = dimnames(data.matrix))
   }
-
   return(data)
 }
 
