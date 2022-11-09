@@ -46,7 +46,7 @@ FormatInputData <- function(data) {
 
   # If `data` is a data frame and the first column is 'date', try to convert.
   if (is.data.frame(data) && tolower(names(data)[1]) %in% c("date", "time")) {
-    if (class(data$date) == "Date") {
+    if (inherits(data$date, "Date")) {
       data <- zoo(data[, -1], data$date)
     } else {
       warning(paste0("Did you mean: data = zoo(data[, -1], data$",

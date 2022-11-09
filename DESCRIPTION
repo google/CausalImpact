@@ -1,6 +1,6 @@
 Package: CausalImpact
 Title: Inferring Causal Effects using Bayesian Structural Time-Series Models
-Date: 2022-04-26
+Date: 2022-11-07
 Author: Kay H. Brodersen <kbrodersen@google.com>,
   Alain Hauser <alhauser@google.com>
 Maintainer: Alain Hauser <alhauser@google.com>
@@ -13,7 +13,7 @@ Copyright: Copyright (C) 2014-2022 Google, Inc.
 Version: 1.3.0
 VignetteBuilder: knitr
 License: Apache License 2.0 | file LICENSE
-Imports: assertthat (>= 0.2.0), Boom, dplyr, ggplot2, zoo
+Imports: assertthat (>= 0.2.0), Boom, ggplot2, zoo
 Depends: bsts (>= 0.9.0)
 Suggests: 
     covr,
