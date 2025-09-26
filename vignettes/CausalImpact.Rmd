@@ -35,7 +35,7 @@ evolved after the intervention if the intervention had never occurred. For a
 quick overview, watch the
 [tutorial video](https://www.youtube.com/watch?v=GTgZfCltMm8).
 For details, see:
-[Brodersen et al., Annals of Applied Statistics (2015)](https://research.google/pubs/pub41854/).
+[Brodersen et al., Annals of Applied Statistics (2015)](https://research.google/pubs/inferring-causal-impact-using-bayesian-structural-time-series-models/).
 
 #### What assumptions does the model make?
 
@@ -422,7 +422,7 @@ the plot, see
 Brodersen KH, Gallusser F, Koehler J, Remy N, Scott SL.
 Inferring causal impact using Bayesian structural time-series models.
 *Annals of Applied Statistics*, 2015, Vol. 9, No. 1, 247-274.
-https://research.google/pubs/pub41854/
+https://research.google/pubs/inferring-causal-impact-using-bayesian-structural-time-series-models/
 
 ### Discussion forum
 

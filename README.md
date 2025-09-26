@@ -24,6 +24,13 @@ to be stable during the post-intervention period. Understanding and checking
 these assumptions for any given application is critical for obtaining valid
 conclusions.
 
+For Python users we recommend the implementation in
+[TFP CausalImpact](https://github.com/google/tfp-causalimpact), contributed by
+Colin Carroll, David Moore, Jacob Burnim, Kyle Loveless, and Susanna Makela. The
+Python implementation uses TensorFlow Probability and has been designed to
+produce results close to those of the R package. Some differences are expected
+given the nature of randomized algorithms.
+
 ## Installation
 
 ```r
@@ -40,12 +47,15 @@ library(CausalImpact)
 ## Further resources
 
 *   Manuscript:
-    [Brodersen et al., Annals of Applied Statistics (2015)](https://research.google/pubs/pub41854/)
+    [Brodersen et al., Annals of Applied Statistics (2015)](https://research.google/pubs/inferring-causal-impact-using-bayesian-structural-time-series-models/)
 
 *   For questions on the statistics behind CausalImpact:
     [Cross Validated](https://stats.stackexchange.com/questions/tagged/causalimpact)
 
 *   For questions on how to use the CausalImpact R package:
-    [Stack Overflow](https://stackoverflow.com/questions/tagged/causalimpact)
+    [Stack Overflow](https://stackoverflow.com/questions/tagged/causal-inference)
 
 *   [Bug reports](https://github.com/google/CausalImpact/issues)
+
+*   Python version:
+    [TFP CausalImpact](https://github.com/google/tfp-causalimpact)

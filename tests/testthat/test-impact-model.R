@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-testthat::context("Unit tests for impact_model.R")
-
 # Author: kbrodersen@google.com (Kay Brodersen)
 
 test_that("ObservationsAreIllConditioned", {
@@ -175,9 +173,12 @@ test_that("ConstructModel", {
     expect_false(is.null(bsts.model))
     expect_equal(class(bsts.model), "bsts")
     expect_equal(as.numeric(bsts.model$original.series), as.numeric(data[, 1]))
-    expect_equivalent(bsts.model$predictors[, 1], rep(1, nrow(data)))
-    expect_equivalent(bsts.model$predictors[, 2], as.numeric(data[, 2]))
-    expect_equivalent(bsts.model$predictors[, 3], as.numeric(data[, 3]))
+    expect_equal(bsts.model$predictors[, 1], rep(1, nrow(data)),
+                 ignore_attr = TRUE)
+    expect_equal(bsts.model$predictors[, 2], as.numeric(data[, 2]),
+                 ignore_attr = TRUE)
+    expect_equal(bsts.model$predictors[, 3], as.numeric(data[, 3]),
+                 ignore_attr = TRUE)
     expect_equal(bsts.model$state.contributions,
                  expected.model$state.contributions)
   })

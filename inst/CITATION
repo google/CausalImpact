@@ -8,7 +8,7 @@ bibentry(
 
     title = paste0("Inferring causal impact using {B}ayesian structural ",
                    "time-series models"),
-    author = personList(
+    author = c(
         as.person("Kay H. Brodersen"),
         as.person("Fabian Gallusser"),
         as.person("Jim Koehler"),
@@ -18,5 +18,5 @@ bibentry(
     year = "2014",
     volume = "9",
     pages = "247--274",
-    url = "https://research.google/pubs/pub41854/"
+    url = "https://research.google/pubs/inferring-causal-impact-using-bayesian-structural-time-series-models/"
 )

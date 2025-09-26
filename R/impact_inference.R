@@ -356,6 +356,14 @@ InterpretSummaryTable <- function(summary, digits = 2L) {
                  "percentage is [", rel.effect.lower[1], ", ",
                  rel.effect.upper[1], "].")
 
+  # Comment on expected relative effect
+  if (abs(summary$RelEffect[1]-summary$AbsEffect[1]/summary$Pred[1])>=.05) {
+    stmt <- paste0(stmt, "\n\n(Note that the expected relative ",
+                 "effect isn't generally the same as the expected absolute ",
+                 "effect divided by the expected prediction since ",
+                 "distributions are often not symmetric.)")
+  }
+
   # Comment on significance
   if (sig && pos) {
     stmt <- paste0(stmt, "\n\nThis means that the positive effect observed ",
@@ -409,14 +417,18 @@ InterpretSummaryTable <- function(summary, digits = 2L) {
   if (p < summary$alpha[1]) {
     stmt <- paste0(stmt, "\n\nThe probability of obtaining this effect by ",
                    "chance is very small (Bayesian one-sided tail-area ",
-                   "probability p = ", round(p, 3), "). This means the causal ",
-                   "effect can be considered statistically significant.")
+                   "probability p = ", round(p, 3), "). This means the ",
+                   "effect is statistically significant. It can be considered ",
+                   "causal if the model assumptions are satisfied.")
   } else {
     stmt <- paste0(stmt, "\n\nThe probability of obtaining this ",
                    "effect by chance is p = ", round(p, 3), ". This ",
                    "means the effect may be spurious and would generally ",
                    "not be considered statistically significant.")
   }
+  stmt <- paste0(stmt, " For more details, including the model assumptions ",
+                 "behind the method, see ",
+                 "https://google.github.io/CausalImpact/.")
   return(stmt)
 }
 

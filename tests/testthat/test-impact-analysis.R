@@ -1,4 +1,4 @@
-# Copyright 2014-2022 Google Inc. All rights reserved.
+# Copyright 2014-2025 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-testthat::context("Unit tests for impact_analysis.R")
 
 # Authors: kbrodersen@google.com (Kay H. Brodersen)
 #          gallusser@google.com (Fabian Gallusser)
@@ -48,7 +46,6 @@ CallAllS3Methods <- function(impact) {
   expect_error(print(impact, "foo"), "summary")
   expect_error(plot(impact), NA)
   expect_error(q <- plot(impact), NA)
-  expect_error(plot(q), NA)
 }
 
 test_that("FormatInputForCausalImpact", {
@@ -736,6 +733,7 @@ test_that("PrintSummary", {
                                           model.args))
   expect_output(PrintSummary(impact), "\\([0-9.]{3}[0-9]*\\)")
   expect_output(PrintSummary(impact, digits = 10), "\\([0-9.]{11}[0-9]*\\)")
+  expect_output(PrintSummary(impact), "Posterior probability of an effect")
   expect_error(PrintSummary(impact, digits = 0), "positive")
   expect_error(PrintSummary(impact, digits = "test"), "positive")
 })

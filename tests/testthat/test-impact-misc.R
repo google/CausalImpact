@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-testthat::context("Unit tests for impact_misc.R")
-
 # Authors: kbrodersen@google.com (Kay Brodersen)
 #          gallusser@google.com (Fabian Gallusser)
 #          alhauser@google.com (Alain Hauser)
@@ -188,7 +186,7 @@ test_that("StandardizeAllVariables", {
     expect_equal(sd(result$data[, column]), 1, tolerance = 0.0001)
   })
   expect_equal(result$UnStandardize, Standardize(data[, 1])$UnStandardize,
-               check.environment = FALSE)
+               ignore_function_env = TRUE)
 
   # Test that several columns are standardized correctly when fitting mean and
   # SD only over part of the rows.
@@ -198,7 +196,7 @@ test_that("StandardizeAllVariables", {
     expect_equal(sd(result$data[11 : 90, column]), 1, tolerance = 0.0001)
   })
   expect_equal(result$UnStandardize, Standardize(data[, 1])$UnStandardize,
-               check.environment = FALSE)
+               ignore_function_env = TRUE)
 
   # Test healthy input: single series only
   set.seed(1)
@@ -209,7 +207,7 @@ test_that("StandardizeAllVariables", {
   expect_equal(mean(result$data), 0, tolerance = 0.0001)
   expect_equal(sd(result$data), 1, tolerance = 0.0001)
   expect_equal(result$UnStandardize, Standardize(data)$UnStandardize,
-               check.environment = FALSE)
+               ignore_function_env = TRUE)
 
   # Test that a single series is standardized correctly when fitting mean and SD
   # only over part of the data range.
@@ -217,7 +215,7 @@ test_that("StandardizeAllVariables", {
   expect_equal(mean(result$data[11: 90]), 0, tolerance = 0.0001)
   expect_equal(sd(result$data[11 : 90]), 1, tolerance = 0.0001)
   expect_equal(result$UnStandardize, Standardize(data)$UnStandardize,
-               check.environment = FALSE)
+               ignore_function_env = TRUE)
 })
 
 test_that("GetPeriodIndices.InvalidInput", {

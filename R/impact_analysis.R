@@ -583,7 +583,7 @@ PrintSummary <- function(impact, digits = 2L) {
   # Print overall tail-area probability
   p <- summary$p[1]
   cat(paste0("Posterior tail-area probability p:   ", round(p, 5), "\n"))
-  cat(paste0("Posterior prob. of a causal effect:  ",
+  cat(paste0("Posterior probability of an effect:  ",
              round((1 - p) * 100, ifelse(p < 0.01, 5, ifelse(p < 0.05, 3, 0))),
              "%\n"))
   cat("\n")

@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-testthat::context("Unit tests for impact_inference.R")
-
 # Author: kbrodersen@google.com (Kay Brodersen)
 
 test_that("GetPosteriorStateSamples", {
@@ -293,7 +291,7 @@ test_that("CompilePosteriorInferences", {
                                            alpha, UnStandardize)
   expect_equal(names(inferences), c("series", "summary", "report",
                                     "posterior.samples"))
-  expect_is(inferences$posterior.samples, "matrix")
+  expect_true(is.matrix(inferences$posterior.samples))
   expect_equal(ncol(inferences$posterior.samples), 200)
   expect_gte(nrow(inferences$posterior.samples), 80)
   expect_lte(nrow(inferences$posterior.samples), 100)

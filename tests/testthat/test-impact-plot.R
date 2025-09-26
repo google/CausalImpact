@@ -1,4 +1,4 @@
-# Copyright 2014-2022 Google Inc. All rights reserved.
+# Copyright 2014-2025 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-testthat::context("Unit tests for impact_plot.R")
-
 # Author: kbrodersen@google.com (Kay Brodersen)
+
+# Tests that two plots are visually equal.
+#
+# Args:
+#   plot1: A ggplot object.
+#   plot2: A ggplot object.
+#
+# Returns:
+#   TRUE if the plots are visually equal, FALSE otherwise.
+IsVisuallyEqual <- function(plot1, plot2) {
+  plot_dir <- tempdir()
+
+  # Save standardized plot images.
+  file1_path <- file.path(plot_dir, "plot1.svg")
+  file2_path <- file.path(plot_dir, "plot2.svg")
+  suppressWarnings(vdiffr::write_svg(plot1, file1_path))
+  suppressWarnings(vdiffr::write_svg(plot2, file2_path))
+
+  # Read and compare contents of the two files.
+  content1 <- readLines(file1_path)
+  content2 <- readLines(file2_path)
+
+  return(identical(content1, content2))
+}
 
 test_that("CreatePeriodMarkers", {
   CreatePeriodMarkers <- CausalImpact:::CreatePeriodMarkers
@@ -104,8 +126,8 @@ test_that("CreateImpactPlot", {
   suppressWarnings(impact <- CausalImpact(data, pre.period, post.period,
                                           model.args))
   q <- CreateImpactPlot(impact)
-  expect_equal(class(q), c("gg", "ggplot"))
-  expect_error(suppressWarnings(plot(q)), NA)
+  expect_true(is_ggplot(q))
+  expect_no_error(suppressWarnings(plot(q)))
 
   # Test input with Date time indices
   data <- zoo(cbind(y, x),
@@ -115,34 +137,25 @@ test_that("CreateImpactPlot", {
   suppressWarnings(impact <- CausalImpact(data, pre.period, post.period,
                                           model.args))
   q <- CreateImpactPlot(impact)
-  expect_equal(class(q), c("gg", "ggplot"))
-  expect_error(suppressWarnings(plot(q)), NA)
+  expect_true(is_ggplot(q))
+  expect_no_error(suppressWarnings(plot(q)))
 
   # Test plot.CausalImpact() generic
   q1 <- CreateImpactPlot(impact)
   q2 <- plot(impact)  # dispatched to plot.CausalImpact()
-  expect_equal(q1, q2, check.environment = FALSE)
+  expect_true(IsVisuallyEqual(q1, q2))
 
   # Test plotting different metrics
   q1 <- plot(impact)
   q2 <- plot(impact, c("original", "pointwise", "cumulative"))
   q3 <- plot(impact, c("o", "point", "c"))
-  expect_equal(q1, q2, check.environment = FALSE)
-  # As of ggplot 2.0.0, `q1` and `q2` are still the same but `q3` is different.
-  # This is because `q1` and `q2` contains:
-  # > q1$plot_env$metrics
-  #   original    pointwise   cumulative
-  #  "original"  "pointwise" "cumulative"
-  # Whereas `q3` contains:
-  # > q3$plot_env$metrics
-  #          o        point            c
-  #  "original"  "pointwise" "cumulative"
-  # So we test whether `q1` equals `q3` except for `$plot_env$metrics`.
-  q3$plot_env$metrics <- q2$plot_env$metrics
-  expect_equal(q1, q3, check.environment = FALSE)
+  q4 <- plot(impact, c("pointwise", "cumulative"))
+  expect_true(IsVisuallyEqual(q1, q2))
+  expect_true(IsVisuallyEqual(q1, q3))
+  expect_false(IsVisuallyEqual(q1, q4))
 
   # Test different order
   q1 <- plot(impact, c("p", "c"))
   q2 <- plot(impact, c("c", "p"))
-  expect_true(!isTRUE(all.equal(q1, q2, check.environment = FALSE)))
+  expect_false(IsVisuallyEqual(q1, q2))
 })
