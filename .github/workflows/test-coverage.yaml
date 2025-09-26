@@ -15,13 +15,13 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - uses: r-lib/actions/setup-r@v1
+      - uses: r-lib/actions/setup-r@v2
         with:
           use-public-rspm: true
 
-      - uses: r-lib/actions/setup-r-dependencies@v1
+      - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: covr
 
