@@ -212,7 +212,8 @@ CausalImpact <- function(data = NULL,
                          model.args = NULL,
                          bsts.model = NULL,
                          post.period.response = NULL,
-                         alpha = 0.05) {
+                         alpha = 0.05, 
+                         UnStandardize = identity) {
   # CausalImpact() performs causal inference through counterfactual
   # predictions using a Bayesian structural time-series model.
   #
@@ -276,6 +277,9 @@ CausalImpact <- function(data = NULL,
   #
   #   alpha:       Desired tail-area probability for posterior intervals.
   #                Defaults to 0.05, which will produce central 95\% intervals.
+  #
+  #   UnStandardize: Function for undoing any data standardization. 
+  #                This is used if and only if a fitted bsts.model is provided instead of data.
   #
   # Returns:
   #   A CausalImpact object. This is a list of:
@@ -360,7 +364,8 @@ CausalImpact <- function(data = NULL,
     impact$model$pre.period <- times[pre.period]
     impact$model$post.period <- times[post.period]
   } else {
-    impact <- RunWithBstsModel(bsts.model, post.period.response, alpha)
+    impact <- RunWithBstsModel(bsts.model, post.period.response, alpha, 
+                               UnStandardize)
   }
 
   return(impact)
@@ -457,7 +462,8 @@ RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
   return(impact)
 }
 
-RunWithBstsModel <- function(bsts.model, post.period.response, alpha = 0.05) {
+RunWithBstsModel <- function(bsts.model, post.period.response, alpha = 0.05, 
+                             UnStandardize = identity) {
   # Runs an impact analysis on top of a fitted bsts model.
   #
   # Args:
@@ -465,6 +471,7 @@ RunWithBstsModel <- function(bsts.model, post.period.response, alpha = 0.05) {
   #                         data during the post-period was set to NA
   #   post.period.response: observed data during the post-intervention period
   #   alpha:                tail-probabilities of posterior intervals
+  #   UnStandardize: Function for undoing any data standardization.
   #
   # Returns:
   #   See CausalImpact().
@@ -484,7 +491,8 @@ RunWithBstsModel <- function(bsts.model, post.period.response, alpha = 0.05) {
   inferences <- CompilePosteriorInferences(bsts.model = bsts.model,
                                            y.cf = post.period.response,
                                            post.period = indices$post.period,
-                                           alpha = alpha)
+                                           alpha = alpha, 
+                                           UnStandardize = UnStandardize)
 
   # Assign response-variable names
   # N.B. The modeling period comprises everything found in bsts, so the actual
