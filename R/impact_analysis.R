@@ -212,7 +212,8 @@ CausalImpact <- function(data = NULL,
                          model.args = NULL,
                          bsts.model = NULL,
                          post.period.response = NULL,
-                         alpha = 0.05) {
+                         alpha = 0.05, 
+                         UnStandardize = identity) {
   # CausalImpact() performs causal inference through counterfactual
   # predictions using a Bayesian structural time-series model.
   #
