@@ -28,6 +28,7 @@ GetPosteriorStateSamples <- function(bsts.model) {
 
   # Get state contributions (e.g., 1000 samples x 2 states x 365 time pts),
   # discarding burn-in samples (=> 900 x 2 x 365)
+  set.seed(1)
   burn <- SuggestBurn(0.1, bsts.model)
   assert_that(burn > 0)
   state.contributions <- bsts.model$state.contributions[-seq_len(burn), , ,
@@ -51,6 +52,7 @@ ComputeResponseTrajectories <- function(bsts.model) {
   # Returns:
   #   matrix [number of post-burn-in MCMC samples] x [time points]
 
+  set.seed(1)
   # Get posterior state samples
   state.samples <- GetPosteriorStateSamples(bsts.model)
 
@@ -101,7 +103,7 @@ ComputePointPredictions <- function(y.samples, state.samples, alpha = 0.05) {
 }
 
 ComputeCumulativePredictions <- function(y.samples, point.pred, y,
-                                         post.period.begin, alpha = 0.05) {
+                                         treatment.start, alpha = 0.05) {
   # Computes summary statistics for the cumulative posterior predictions over
   # the unobserved data points in the post-intervention period.
   #
@@ -112,7 +114,7 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   #                      \code{ComputePointPredictions()}.
   #   y:                 Actual observed response, from the beginning of the
   #                      pre-period to the end of the observed period.
-  #   post.period.begin: Index of the first data point of the post-period.
+  #   treatment.start:    Index of the first data point treatment.
   #   alpha:             The resulting coverage of the posterior intervals will
   #                      be \code{1 - alpha}.
   #
@@ -135,7 +137,7 @@ ComputeCumulativePredictions <- function(y.samples, point.pred, y,
   # post-period.
 
   # Compute posterior mean
-  is.post.period <- seq_along(y) >= post.period.begin
+  is.post.period <- (seq_along(y) >= treatment.start)
   cum.pred.mean.pre <- cumsum.na.rm(as.vector(y)[!is.post.period])
   non.na.indices <- which(!is.na(cum.pred.mean.pre))
   assert_that(length(non.na.indices) > 0)
@@ -455,7 +457,8 @@ AssertCumulativePredictionsAreConsistent <- function(cum.pred, post.period,
         is.numerically.equal(cum.pred.col[post.period[2]] -
                                cum.pred.col[last.non.na.index],
                              summary.entry[2]),
-        msg = paste0("The calculated ", description, " of the cumulative ",
+        msg = paste0("The calculated ", cum.pred.col[post.period[2]] -
+                               cum.pred.col[last.non.na.index], " of the cumulative ",
                      "effect is inconsistent with the previously calculated ",
                      "one. You might try to run CausalImpact on a shorter ",
                      "time series to avoid this problem."))
@@ -535,7 +538,8 @@ CheckInputForCompilePosteriorInferences <- function(bsts.model, y.cf,
 }
 
 CompilePosteriorInferences <- function(bsts.model, y.cf, post.period,
-                                       alpha = 0.05, UnStandardize = identity) {
+                                       alpha = 0.05, UnStandardize = identity, 
+                                       treatment.end = NULL) {
   # Takes in a fitted \code{bsts} model and computes the posterior predictive
   # distributions, over time, for the counterfactual response and the causal
   # effect.
@@ -551,6 +555,9 @@ CompilePosteriorInferences <- function(bsts.model, y.cf, post.period,
   #   UnStandardize: If \code{bsts()} was run on standardized data, this is the
   #                  function to undo that standardization. This is critical for
   #                  obtaining correct cumulative predictions.
+  #   treatment.end: The index of the end of treatment in the original data.
+  #                  If end of treatment does not coincidide with end of data, this is
+  #                  additionally supplied.
   #
   # Returns:
   #   series:  zoo time-series object of: point.pred, point.pred.lower, ...
@@ -583,20 +590,28 @@ CompilePosteriorInferences <- function(bsts.model, y.cf, post.period,
   y.model[is.cf.period] <- y.cf
 
   # Compile summary statistics (in original space). Summary statistics consider
-  # quantities in the post-period only, not in the whole counterfactual period.
-  is.post.period <- (indices >= post.period[1]) & (indices <= post.period[2])
+  # quantities in the period from start of treatment until the end of treatment, not
+  # necessarily the end of the data.
+  treatment.start <- post.period[1]
+  if (is.null(treatment.end)) {
+    treatment.end <- post.period[2]
+  } 
+  post.period <- c(treatment.start, treatment.end)
+
+  is.post.period <- (indices >= treatment.start) & (indices <= treatment.end)
   y.samples.post <- y.samples[, is.post.period, drop = FALSE]
   point.pred.mean.post <- point.pred$point.pred[is.post.period]
-  y.post <- y.cf[tail(is.post.period, length(y.cf))]
+  y.post <- y.model[is.post.period]
   summary <- CompileSummaryTable(y.post, y.samples.post, point.pred.mean.post,
-                                 alpha)
+                                  alpha)
   report <- InterpretSummaryTable(summary)
 
   # Compute cumulative predictions (in original space)
   cum.pred <- ComputeCumulativePredictions(y.samples, point.pred, y.model,
-                                           post.period[1], alpha)
+                                           treatment.start, alpha)
 
   # Check that <cum.pred> is consistent with <summary>
+  
   AssertCumulativePredictionsAreConsistent(cum.pred, post.period, summary)
 
   # Create results series

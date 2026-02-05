@@ -209,6 +209,7 @@ FormatInputForCausalImpact <- function(data, pre.period, post.period,
 CausalImpact <- function(data = NULL,
                          pre.period = NULL,
                          post.period = NULL,
+                         treatment.end = NULL,
                          model.args = NULL,
                          bsts.model = NULL,
                          post.period.response = NULL,
@@ -222,60 +223,63 @@ CausalImpact <- function(data = NULL,
   # (http://google.github.io/CausalImpact/).
   #
   # Args:
-  #   data:        Time series of response variable and any covariates. This can
-  #                be a \code{zoo} object; a \code{vector}; a \code{matrix}; or
-  #                a \code{data.frame}. In any of these cases, the response
-  #                variable must be in the first column, and any covariates in
-  #                subsequent columns. A \code{zoo} object is recommended, as
-  #                its time indices will be used to format the x-axis in
-  #                \code{plot()}.
+  #   data:           Time series of response variable and any covariates. This can
+  #                   be a \code{zoo} object; a \code{vector}; a \code{matrix}; or
+  #                   a \code{data.frame}. In any of these cases, the response
+  #                   variable must be in the first column, and any covariates in
+  #                   subsequent columns. A \code{zoo} object is recommended, as
+  #                   its time indices will be used to format the x-axis in
+  #                   \code{plot()}.
   #
-  #   pre.period:  A vector specifying the first and the last time point of the
-  #                pre-intervention period in the response vector \code{y}. This
-  #                period can be thought of as a training period, used to
-  #                determine the relationship between the response variable and
-  #                the covariates. If \code{data} is a \code{zoo} object with
-  #                a \code{time} attribute, \code{pre.period} must be indicated
-  #                using the same time scale (i.e. using the same class as
-  #                \code{time(data)}, see examples). If \code{data} doesn't have
-  #                a \code{time} attribute, \code{post.period} is indicated with
-  #                indices.
+  #   pre.period:     A vector specifying the first and the last time point of the
+  #                   pre-intervention period in the response vector \code{y}. This
+  #                   period can be thought of as a training period, used to
+  #                   determine the relationship between the response variable and
+  #                   the covariates. If \code{data} is a \code{zoo} object with
+  #                   a \code{time} attribute, \code{pre.period} must be indicated
+  #                   using the same time scale (i.e. using the same class as
+  #                   \code{time(data)}, see examples). If \code{data} doesn't have
+  #                   a \code{time} attribute, \code{post.period} is indicated with
+  #                   indices.
   #
-  #   post.period: A vector specifying the first and the last day of the
-  #                post-intervention period we wish to study. This is the period
-  #                after the intervention has begun whose effect we are
-  #                interested in. The relationship between response variable and
-  #                covariates, as determined during the pre-period, will be used
-  #                to predict how the response variable should have evolved
-  #                during the post-period had no intervention taken place. If
-  #                \code{data} is a \code{zoo} object with a \code{time}
-  #                attribute, \code{post.period} must be indicated using the
-  #                same time scale. If \code{data} doesn't have a \code{time}
-  #                attribute, \code{post.period} is indicated with indices.
+  #   post.period:    A vector specifying the first and the last day of the
+  #                   post-intervention period we wish to study. This is the period
+  #                   after the intervention has begun whose effect we are
+  #                   interested in. The relationship between response variable and
+  #                   covariates, as determined during the pre-period, will be used
+  #                   to predict how the response variable should have evolved
+  #                   during the post-period had no intervention taken place. If
+  #                   \code{data} is a \code{zoo} object with a \code{time}
+  #                   attribute, \code{post.period} must be indicated using the
+  #                   same time scale. If \code{data} doesn't have a \code{time}
+  #                   attribute, \code{post.period} is indicated with indices.
   #
-  #   model.args:  Optional arguments that can be used to adjust the default
-  #                construction of the state-space model used for inference.
-  #                For full control over the model, you can construct your own
-  #                model using the \code{bsts} package and feed the fitted model
-  #                into \code{CausalImpact()} (see examples).
+  #   treatment.end:  Optional argument representing the date that treatment ends if it
+  #                   does not coincide with end of the data provided.
   #
-  #   bsts.model:  Instead of passing in \code{data} and having
-  #                \code{CausalImpact()} construct a model, it is possible to
-  #                construct a model yourself using the \code{bsts} package. In
-  #                this case, omit \code{data}, \code{pre.period}, and
-  #                \code{post.period}. Instead only pass in \code{bsts.model},
-  #                \code{y.post}, and \code{alpha} (optional). The model must
-  #                have been fitted on data where the response variable was set
-  #                to \code{NA} during the post-treatment period. The actual
-  #                observed data during this period must then be passed to the
-  #                function in \code{y.post}.
+  #   model.args:     Optional arguments that can be used to adjust the default
+  #                   construction of the state-space model used for inference.
+  #                   For full control over the model, you can construct your own
+  #                   model using the \code{bsts} package and feed the fitted model
+  #                   into \code{CausalImpact()} (see examples).
+  #
+  #   bsts.model:     Instead of passing in \code{data} and having
+  #                   \code{CausalImpact()} construct a model, it is possible to
+  #                   construct a model yourself using the \code{bsts} package. In
+  #                   this case, omit \code{data}, \code{pre.period}, and
+  #                   \code{post.period}. Instead only pass in \code{bsts.model},
+  #                   \code{y.post}, and \code{alpha} (optional). The model must
+  #                   have been fitted on data where the response variable was set
+  #                   to \code{NA} during the post-treatment period. The actual
+  #                   observed data during this period must then be passed to the
+  #                   function in \code{y.post}.
   #
   #   post.period.response: Actual observed data during the post-intervention
-  #                period. This is required if and only if a fitted
-  #                \code{bsts.model} is passed instead of \code{data}.
+  #                         period. This is required if and only if a fitted
+  #                         \code{bsts.model} is passed instead of \code{data}.
   #
-  #   alpha:       Desired tail-area probability for posterior intervals.
-  #                Defaults to 0.05, which will produce central 95\% intervals.
+  #   alpha:          Desired tail-area probability for posterior intervals.
+  #                   Defaults to 0.05, which will produce central 95\% intervals.
   #
   # Returns:
   #   A CausalImpact object. This is a list of:
@@ -344,6 +348,16 @@ CausalImpact <- function(data = NULL,
   checked <- FormatInputForCausalImpact(data, pre.period, post.period,
                                         model.args, bsts.model,
                                         post.period.response, alpha)
+
+  # If treatment.end is not null then we get its index in the series
+  if (!is.null(treatment.end)) {
+    times <- time(data)
+    indices <- seq_along(times)
+    is.period <- (post.period[1] <= times) & (times <= as.Date(treatment.end))
+    period.indices <- range(indices[is.period])
+    treatment.end <- period.indices[2]
+  }
+
   data <- checked$data
   pre.period <- checked$pre.period
   post.period <- checked$post.period
@@ -354,7 +368,7 @@ CausalImpact <- function(data = NULL,
 
   # Depending on input, dispatch to the appropriate Run* method()
   if (!is.null(data)) {
-    impact <- RunWithData(data, pre.period, post.period, model.args, alpha)
+    impact <- RunWithData(data, pre.period, post.period, treatment.end, model.args, alpha)
     # Return pre- and post-period in the time unit of the time series.
     times <- time(data)
     impact$model$pre.period <- times[pre.period]
@@ -366,17 +380,19 @@ CausalImpact <- function(data = NULL,
   return(impact)
 }
 
-RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
+RunWithData <- function(data, pre.period, post.period, treatment.end = NULL, model.args, alpha) {
   # Runs an impact analysis on top of a fitted bsts model.
   #
   # Args:
-  #   data:        zoo object of response variable and covariates
-  #   pre.period:  two-element vector specifying the indices of the  pre-period
-  #                limits.
-  #   post.period: two-element vector specifying the indices of the post-period
-  #                limits.
-  #   model.args:  list of model arguments
-  #   alpha:       tail-probabilities of posterior intervals
+  #   data:          zoo object of response variable and covariates
+  #   pre.period:    two-element vector specifying the indices of the  pre-period
+  #                  limits.
+  #   post.period:   two-element vector specifying the indices of the post-period
+  #                  limits.
+  #   treatment.end: Index representing the end of treatment if it does not coincide with
+  #                  the end of the data.
+  #   model.args:    list of model arguments
+  #   alpha:         tail-probabilities of posterior intervals
   #
   # Returns:
   #   See CausalImpact().
@@ -422,7 +438,7 @@ RunWithData <- function(data, pre.period, post.period, model.args, alpha) {
     # only sees the data from the beginning of the pre-period.
     inferences <- CompilePosteriorInferences(bsts.model, y.cf,
                                              post.period - pre.period[1] + 1,
-                                             alpha, UnStandardize)
+                                             alpha, UnStandardize, treatment.end)
   } else {
     inferences <- CompileNaInferences(data[, 1])
   }
