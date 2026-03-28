@@ -8,3 +8,5 @@
 .Rhistory
 # Rmd temp output
 CausalImpact_files/
+# Test output
+tests/testthat/Rplots.pdf
