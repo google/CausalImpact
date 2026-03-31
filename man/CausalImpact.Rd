@@ -31,7 +31,7 @@
   CausalImpact(data = NULL, pre.period = NULL,
     post.period = NULL, model.args = NULL,
     bsts.model = NULL, post.period.response = NULL,
-    alpha = 0.05)
+    alpha = 0.05, UnStandardize = identity)
 }
 \arguments{
   \item{data}{Time series of response variable and any
@@ -87,7 +87,7 @@
   observed data during this period must then be passed to
   the function in \code{post.period.response}.}
 
-\item{post.period.response}{Actual observed data during
+  \item{post.period.response}{Actual observed data during
   the post-intervention period. This is required if and
   only if a fitted \code{bsts.model} is provided instead
   of \code{data}.}
@@ -95,6 +95,9 @@
   \item{alpha}{Desired tail-area probability for posterior
   intervals. Defaults to 0.05, which will produce central
   95\% intervals.}
+  
+  \item{UnStandardize}{Function for undoing any data standardization.
+  This is used if and only if a fitted \code{bsts.model} is provided instead of data.}
 }
 \value{
   \code{CausalImpact()} returns a \code{CausalImpact}
