@@ -222,6 +222,7 @@
   Kay H. Brodersen \email{kbrodersen@google.com}
 }
 \examples{
+\donttest{
 # Example 1
 #
 # Example analysis on a simple artificial dataset
@@ -246,7 +247,6 @@ plot(impact$model$bsts.model, "coefficients")
 # For further output, type:
 names(impact)
 
-\dontrun{
 # Example 2
 #
 # Weekly time series: same data as in example 1, annotated
